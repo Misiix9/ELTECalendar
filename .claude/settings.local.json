@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter create:*)",
+      "Read(/home/onxy/**)",
+      "Bash(curl:*)",
+      "Read(/home/onxy/**)",
+      "Bash(snap install:*)",
+      "Bash(pacman:*)",
+      "Bash(sudo pacman:*)",
+      "mcp__sequential-thinking__sequentialthinking"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

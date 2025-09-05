@@ -1,0 +1,39 @@
+// Import the functions you need from the SDKs you need
+
+import { initializeApp } from "firebase/app";
+
+import { getAnalytics } from "firebase/analytics";
+
+// TODO: Add SDKs for Firebase products that you want to use
+
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+
+// Your web app's Firebase configuration
+
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+
+const firebaseConfig = {
+
+  apiKey: "AIzaSyAl4fkaO1z6ipOqgxt9xqzr2Tz1vLyTj2c",
+
+  authDomain: "elte-calendar-61bb3.firebaseapp.com",
+
+  projectId: "elte-calendar-61bb3",
+
+  storageBucket: "elte-calendar-61bb3.firebasestorage.app",
+
+  messagingSenderId: "971124387883",
+
+  appId: "1:971124387883:web:620dda2152c9ec032a7a6e",
+
+  measurementId: "G-JG57EJ1BEJ"
+
+};
+
+
+// Initialize Firebase
+
+const app = initializeApp(firebaseConfig);
+
+const analytics = getAnalytics(app);

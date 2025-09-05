@@ -1,0 +1,70 @@
+{
+    "name": "ELTE Calendar",
+    "short_name": "ELTE Calendar",
+    "description": "University calendar application for ELTE students to import and manage their course schedules",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#F4F4F4",
+    "theme_color": "#03284F",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable any"
+        }
+    ],
+    "categories": ["education", "productivity", "utilities"],
+    "lang": "hu",
+    "scope": "/",
+    "screenshots": [
+        {
+            "src": "screenshots/calendar-view.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "platform": "wide",
+            "label": "Calendar view showing weekly schedule"
+        },
+        {
+            "src": "screenshots/mobile-calendar.png", 
+            "sizes": "375x812",
+            "type": "image/png",
+            "platform": "narrow",
+            "label": "Mobile calendar interface"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Today's Schedule",
+            "short_name": "Today",
+            "description": "View today's classes",
+            "url": "/?view=daily",
+            "icons": [
+                {
+                    "src": "icons/today-96.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "Import Schedule",
+            "short_name": "Import",
+            "description": "Import Excel schedule file",
+            "url": "/?action=import",
+            "icons": [
+                {
+                    "src": "icons/import-96.png", 
+                    "sizes": "96x96"
+                }
+            ]
+        }
+    ]
+}

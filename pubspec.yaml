@@ -1,0 +1,84 @@
+name: elte_calendar
+description: "University calendar application for ELTE students to import and manage their course schedules"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.1.0 <4.0.0'
+  flutter: ">=3.13.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # Firebase
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.15.3
+  cloud_firestore: ^4.13.6
+  firebase_storage: ^11.5.6
+  
+  # Authentication
+  google_sign_in: ^6.1.6
+  sign_in_with_apple: ^5.0.0
+  
+  # Excel processing
+  excel: ^2.1.0
+  file_picker: ^6.1.1
+  
+  # Calendar UI
+  table_calendar: ^3.0.9
+  syncfusion_flutter_calendar: ^23.2.7
+  
+  # State Management
+  provider: ^6.1.1
+  
+  # Localization
+  intl: ^0.18.1
+  
+  # UI/UX
+  flutter_screenutil: ^5.9.0
+  cached_network_image: ^3.3.0
+  shimmer: ^3.0.0
+  
+  # Local storage
+  shared_preferences: ^2.2.2
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  
+  # Notifications
+  flutter_local_notifications: ^16.3.0
+  
+  # Calendar export
+  add_2_calendar: ^3.0.1
+  url_launcher: ^6.2.1
+
+  # Additional utilities
+  path_provider: ^2.1.1
+  uuid: ^4.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  hive_generator: ^2.0.1
+  build_runner: ^2.4.7
+
+flutter:
+  uses-material-design: true
+  generate: true
+
+  # Assets
+  assets:
+    - assets/images/
+    - assets/icons/
+    
+  # Fonts (using default Material Design fonts for now)
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: fonts/Roboto-Regular.ttf
+        - asset: fonts/Roboto-Bold.ttf
+          weight: 700
