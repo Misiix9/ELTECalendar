@@ -16,10 +16,6 @@ import 'services/auth_service.dart';
 import 'services/firebase_service.dart';
 import 'services/semester_service.dart';
 import 'services/calendar_service.dart';
-import 'services/notification_service.dart';
-import 'services/export_service.dart';
-import 'services/connectivity_service.dart';
-import 'services/sync_service.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
@@ -28,17 +24,8 @@ import 'screens/calendar/calendar_main_screen.dart';
 import 'screens/import/excel_import_screen.dart';
 import 'screens/settings/semester_management_screen.dart';
 import 'screens/courses/course_list_screen.dart';
-import 'screens/courses/course_detail_screen.dart';
 import 'screens/courses/course_edit_screen.dart';
-import 'screens/notifications/notifications_screen.dart';
-import 'screens/settings/notification_settings_screen.dart';
-import 'screens/settings/sync_settings_screen.dart';
-import 'screens/export/export_screen.dart';
-import 'screens/export/export_history_screen.dart';
 import 'widgets/common_widgets/auth_wrapper.dart';
-import 'models/user_model.dart';
-import 'models/course_model.dart';
-import 'models/sync_model.dart';
 
 /// Main application entry point
 /// Initializes Firebase, Hive local storage, and app configuration
@@ -57,13 +44,9 @@ void main() async {
     
     // Register Hive adapters for custom objects
     // Note: Adapters will be generated when running 'dart run build_runner build'
-    // TODO: Uncomment when adapters are generated
     // Hive.registerAdapter(StudentUserAdapter());
     // Hive.registerAdapter(CourseAdapter());
     // Hive.registerAdapter(ScheduleSlotAdapter());
-    // Hive.registerAdapter(SyncStatusAdapter());
-    // Hive.registerAdapter(SyncMetadataAdapter());
-    // Hive.registerAdapter(SyncQueueItemAdapter());
     
     // Run the application
     runApp(const ELTECalendarApp());
@@ -89,10 +72,6 @@ class _ELTECalendarAppState extends State<ELTECalendarApp> {
   late FirebaseService _firebaseService;
   late SemesterService _semesterService;
   late CalendarService _calendarService;
-  late NotificationService _notificationService;
-  late ExportService _exportService;
-  late ConnectivityService _connectivityService;
-  late SyncService _syncService;
   bool _isInitialized = false;
 
   @override
@@ -106,20 +85,13 @@ class _ELTECalendarAppState extends State<ELTECalendarApp> {
     try {
       _authService = AuthService();
       _firebaseService = FirebaseService();
-      _connectivityService = ConnectivityService();
       _semesterService = SemesterService();
       _calendarService = CalendarService(_firebaseService, _authService, _semesterService);
-      _notificationService = NotificationService(_authService, _firebaseService, _calendarService, _semesterService);
-      _exportService = ExportService(_calendarService, _semesterService, _authService);
-      _syncService = SyncService(_connectivityService, _firebaseService, _authService);
 
-      // Initialize services in order
+      // Initialize services
       await _firebaseService.initialize();
-      await _connectivityService.initialize();
       await _authService.initialize();
       await _semesterService.initialize();
-      await _notificationService.initialize();
-      await _syncService.initialize();
 
       if (mounted) {
         setState(() {
@@ -160,17 +132,9 @@ class _ELTECalendarAppState extends State<ELTECalendarApp> {
         // Calendar service provider
         ChangeNotifierProvider.value(value: _calendarService),
         
-        // Notification service provider
-        ChangeNotifierProvider.value(value: _notificationService),
-        
-        // Export service provider
-        ChangeNotifierProvider.value(value: _exportService),
-        
-        // Connectivity service provider
-        ChangeNotifierProvider.value(value: _connectivityService),
-        
-        // Sync service provider
-        ChangeNotifierProvider.value(value: _syncService),
+        // TODO: Add other service providers as they are implemented
+        // - ExcelParserService
+        // - NotificationService
       ],
       child: MaterialApp(
         // Application metadata
@@ -207,11 +171,7 @@ class _ELTECalendarAppState extends State<ELTECalendarApp> {
           '/semester-management': (context) => const AuthGuard(child: SemesterManagementScreen()),
           '/courses': (context) => const AuthGuard(child: CourseListScreen()),
           '/course-create': (context) => const AuthGuard(child: CourseEditScreen()),
-          '/notifications': (context) => const AuthGuard(child: NotificationsScreen()),
-          '/notification-settings': (context) => const AuthGuard(child: NotificationSettingsScreen()),
-          '/sync-settings': (context) => const AuthGuard(child: SyncSettingsScreen()),
-          '/export': (context) => const AuthGuard(child: ExportScreen()),
-          '/export-history': (context) => const AuthGuard(child: ExportHistoryScreen()),
+          // TODO: Add additional routes as screens are implemented
         },
         
         // Initial route
@@ -236,10 +196,6 @@ class _ELTECalendarAppState extends State<ELTECalendarApp> {
   void dispose() {
     _authService.dispose();
     _calendarService.dispose();
-    _notificationService.dispose();
-    _exportService.dispose();
-    _connectivityService.dispose();
-    _syncService.dispose();
     super.dispose();
   }
 }

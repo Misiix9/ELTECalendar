@@ -10,11 +10,9 @@ import '../../services/excel_parser_service.dart';
 import '../../services/firebase_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/semester_service.dart';
-import '../../services/notification_service.dart';
 import '../../config/theme_config.dart';
 import '../../config/localization_config.dart';
 import '../../models/course_model.dart';
-import '../../models/user_model.dart';
 import '../../widgets/common_widgets/loading_overlay.dart';
 import '../../widgets/common_widgets/auth_button.dart';
 
@@ -587,10 +585,6 @@ class _ExcelImportScreenState extends State<ExcelImportScreen> {
         _selectedSemester = null;
       });
 
-      // Send import complete notification
-      final notificationService = context.read<NotificationService>();
-      await notificationService.sendImportCompleteNotification(successfulCourses.length);
-      
       // Navigate back after successful import
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {
