@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "971124387883",
+    "project_id": "elte-calendar-61bb3",
+    "storage_bucket": "elte-calendar-61bb3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:971124387883:android:78ef49c0547f1cb62a7a6e",
+        "android_client_info": {
+          "package_name": "com.elte.calendar"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "971124387883-s6heuqbg6jaugfi768fkoeeiv6nd0nin.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBVrl7nZrhimkINjvWpGz0nYKQKdmguHFg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "971124387883-s6heuqbg6jaugfi768fkoeeiv6nd0nin.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

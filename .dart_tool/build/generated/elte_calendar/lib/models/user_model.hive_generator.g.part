@@ -1,0 +1,65 @@
+// **************************************************************************
+// TypeAdapterGenerator
+// **************************************************************************
+
+class StudentUserAdapter extends TypeAdapter<StudentUser> {
+  @override
+  final int typeId = 0;
+
+  @override
+  StudentUser read(BinaryReader reader) {
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
+    return StudentUser(
+      uid: fields[0] as String,
+      email: fields[1] as String,
+      displayName: fields[2] as String,
+      emailVerified: fields[3] as bool,
+      createdAt: fields[4] as DateTime,
+      currentSemester: fields[5] as String,
+      semesters: (fields[6] as Map).map((dynamic k, dynamic v) =>
+          MapEntry(k as String, (v as List).cast<Course>())),
+      lastLoginAt: fields[7] as DateTime?,
+      profileImageUrl: fields[8] as String?,
+      preferences: (fields[9] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, StudentUser obj) {
+    writer
+      ..writeByte(10)
+      ..writeByte(0)
+      ..write(obj.uid)
+      ..writeByte(1)
+      ..write(obj.email)
+      ..writeByte(2)
+      ..write(obj.displayName)
+      ..writeByte(3)
+      ..write(obj.emailVerified)
+      ..writeByte(4)
+      ..write(obj.createdAt)
+      ..writeByte(5)
+      ..write(obj.currentSemester)
+      ..writeByte(6)
+      ..write(obj.semesters)
+      ..writeByte(7)
+      ..write(obj.lastLoginAt)
+      ..writeByte(8)
+      ..write(obj.profileImageUrl)
+      ..writeByte(9)
+      ..write(obj.preferences);
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is StudentUserAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}

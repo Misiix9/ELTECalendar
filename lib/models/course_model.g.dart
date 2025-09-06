@@ -1,0 +1,123 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'course_model.dart';
+
+// **************************************************************************
+// TypeAdapterGenerator
+// **************************************************************************
+
+class CourseAdapter extends TypeAdapter<Course> {
+  @override
+  final int typeId = 1;
+
+  @override
+  Course read(BinaryReader reader) {
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
+    return Course(
+      id: fields[0] as String,
+      courseCode: fields[1] as String,
+      courseName: fields[2] as String,
+      classCode: fields[3] as String,
+      classType: fields[4] as String,
+      weeklyHours: fields[5] as int,
+      rawScheduleInfo: fields[6] as String,
+      instructors: (fields[7] as List).cast<String>(),
+      scheduleSlots: (fields[8] as List).cast<ScheduleSlot>(),
+      createdAt: fields[9] as DateTime?,
+      updatedAt: fields[10] as DateTime?,
+      notes: fields[11] as String?,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, Course obj) {
+    writer
+      ..writeByte(12)
+      ..writeByte(0)
+      ..write(obj.id)
+      ..writeByte(1)
+      ..write(obj.courseCode)
+      ..writeByte(2)
+      ..write(obj.courseName)
+      ..writeByte(3)
+      ..write(obj.classCode)
+      ..writeByte(4)
+      ..write(obj.classType)
+      ..writeByte(5)
+      ..write(obj.weeklyHours)
+      ..writeByte(6)
+      ..write(obj.rawScheduleInfo)
+      ..writeByte(7)
+      ..write(obj.instructors)
+      ..writeByte(8)
+      ..write(obj.scheduleSlots)
+      ..writeByte(9)
+      ..write(obj.createdAt)
+      ..writeByte(10)
+      ..write(obj.updatedAt)
+      ..writeByte(11)
+      ..write(obj.notes);
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CourseAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}
+
+class ScheduleSlotAdapter extends TypeAdapter<ScheduleSlot> {
+  @override
+  final int typeId = 2;
+
+  @override
+  ScheduleSlot read(BinaryReader reader) {
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
+    return ScheduleSlot(
+      dayOfWeek: fields[0] as int,
+      startTime: fields[1] as TimeOfDay,
+      endTime: fields[2] as TimeOfDay,
+      location: fields[3] as String,
+      courseId: fields[4] as String,
+      displayColor: fields[5] as Color,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, ScheduleSlot obj) {
+    writer
+      ..writeByte(6)
+      ..writeByte(0)
+      ..write(obj.dayOfWeek)
+      ..writeByte(1)
+      ..write(obj.startTime)
+      ..writeByte(2)
+      ..write(obj.endTime)
+      ..writeByte(3)
+      ..write(obj.location)
+      ..writeByte(4)
+      ..write(obj.courseId)
+      ..writeByte(5)
+      ..write(obj.displayColor);
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ScheduleSlotAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}

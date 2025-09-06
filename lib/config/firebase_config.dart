@@ -41,20 +41,20 @@ class DefaultFirebaseOptions {
   /// Web platform configuration
   /// TODO: Replace with actual Firebase project credentials
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'your-web-api-key',
-    appId: 'your-web-app-id',
-    messagingSenderId: 'your-sender-id',
-    projectId: 'elte-calendar',
-    authDomain: 'elte-calendar.firebaseapp.com',
-    storageBucket: 'elte-calendar.appspot.com',
-    measurementId: 'your-measurement-id',
+    apiKey: "AIzaSyAl4fkaO1z6ipOqgxt9xqzr2Tz1vLyTj2c",
+    authDomain: "elte-calendar-61bb3.firebaseapp.com",
+    projectId: "elte-calendar-61bb3",
+    storageBucket: "elte-calendar-61bb3.firebasestorage.app",
+    messagingSenderId: "971124387883",
+    appId: "1:971124387883:web:620dda2152c9ec032a7a6e",
+    measurementId: "G-JG57EJ1BEJ"
   );
 
   /// Android platform configuration
   /// TODO: Replace with actual Firebase project credentials
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'your-android-api-key',
-    appId: 'your-android-app-id',
+    appId: '1:971124387883:android:78ef49c0547f1cb62a7a6e',
     messagingSenderId: 'your-sender-id',
     projectId: 'elte-calendar',
     storageBucket: 'elte-calendar.appspot.com',
@@ -64,7 +64,7 @@ class DefaultFirebaseOptions {
   /// TODO: Replace with actual Firebase project credentials
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'your-ios-api-key',
-    appId: 'your-ios-app-id',
+    appId: '1:971124387883:ios:5417f0bb976d4fe22a7a6e',
     messagingSenderId: 'your-sender-id',
     projectId: 'elte-calendar',
     storageBucket: 'elte-calendar.appspot.com',

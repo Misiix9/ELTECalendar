@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import '../models/user_model.dart';
 import '../models/course_model.dart';
+import '../models/notification_model.dart';
 import '../utils/constants.dart';
 
 /// Firebase service for Firestore and Storage operations
@@ -135,6 +136,35 @@ class FirebaseService {
     }
   }
 
+  /// Import courses to a specific semester (overwrites existing courses)
+  /// Alias for saveCourses with import-specific logging
+  Future<void> importCoursesToSemester(
+    String userId, 
+    String semesterId, 
+    List<Course> courses
+  ) async {
+    try {
+      if (kDebugMode) {
+        print('Starting course import: ${courses.length} courses to semester $semesterId');
+      }
+
+      // Use existing saveCourses method (which handles overwrite)
+      await saveCourses(userId, semesterId, courses);
+
+      // Log import success
+      await _logImportActivity(userId, semesterId, courses.length);
+
+      if (kDebugMode) {
+        print('Successfully imported ${courses.length} courses to semester $semesterId');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Failed to import courses to semester: $e');
+      }
+      throw Exception('Failed to import courses: $e');
+    }
+  }
+
   /// Get courses for a specific semester
   Future<List<Course>> getCourses(String userId, String semesterId) async {
     try {
@@ -177,6 +207,34 @@ class FirebaseService {
     }
   }
 
+  /// Save a single course (create or update)
+  Future<void> saveCourse(String userId, Course course) async {
+    try {
+      final semesterId = course.semester;
+      if (semesterId == null) {
+        throw Exception('Course must have a semester assigned');
+      }
+
+      await _firestore
+          .collection(AppConstants.usersCollection)
+          .doc(userId)
+          .collection(AppConstants.semestersSubcollection)
+          .doc(semesterId)
+          .collection(AppConstants.coursesSubcollection)
+          .doc(course.id)
+          .set(course.toFirestore(), SetOptions(merge: true));
+
+      if (kDebugMode) {
+        print('Saved course ${course.id}');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Failed to save course: $e');
+      }
+      throw Exception('Failed to save course: $e');
+    }
+  }
+
   /// Update a single course
   Future<void> updateCourse(String userId, String semesterId, Course course) async {
     try {
@@ -200,8 +258,44 @@ class FirebaseService {
     }
   }
 
-  /// Delete a course
-  Future<void> deleteCourse(String userId, String semesterId, String courseId) async {
+  /// Delete a course by course ID (finds the semester automatically)
+  Future<void> deleteCourse(String userId, String courseId) async {
+    try {
+      // Find which semester contains this course
+      final userDoc = _firestore
+          .collection(AppConstants.usersCollection)
+          .doc(userId);
+      
+      final semestersQuery = await userDoc
+          .collection(AppConstants.semestersSubcollection)
+          .get();
+
+      for (final semesterDoc in semestersQuery.docs) {
+        final courseDoc = await semesterDoc.reference
+            .collection(AppConstants.coursesSubcollection)
+            .doc(courseId)
+            .get();
+        
+        if (courseDoc.exists) {
+          await courseDoc.reference.delete();
+          if (kDebugMode) {
+            print('Deleted course $courseId from semester ${semesterDoc.id}');
+          }
+          return;
+        }
+      }
+      
+      throw Exception('Course $courseId not found in any semester');
+    } catch (e) {
+      if (kDebugMode) {
+        print('Failed to delete course: $e');
+      }
+      throw Exception('Failed to delete course: $e');
+    }
+  }
+
+  /// Delete a course from specific semester
+  Future<void> deleteCourseFromSemester(String userId, String semesterId, String courseId) async {
     try {
       await _firestore
           .collection(AppConstants.usersCollection)
@@ -578,6 +672,126 @@ class FirebaseService {
         print('Failed to sync offline changes: $e');
       }
       throw Exception('Failed to sync offline changes: $e');
+    }
+  }
+
+  /// Log import activity for analytics and debugging
+  Future<void> _logImportActivity(String userId, String semesterId, int courseCount) async {
+    try {
+      await _firestore
+          .collection('import_logs')
+          .add({
+        'userId': userId,
+        'semesterId': semesterId,
+        'courseCount': courseCount,
+        'timestamp': FieldValue.serverTimestamp(),
+        'type': 'excel_import',
+      });
+    } catch (e) {
+      // Log errors are non-critical, don't throw
+      if (kDebugMode) {
+        print('Failed to log import activity: $e');
+      }
+    }
+  }
+
+  /// Get user notifications
+  Future<List<AppNotification>> getUserNotifications(String userId) async {
+    try {
+      final snapshot = await _firestore
+          .collection(AppConstants.usersCollection)
+          .doc(userId)
+          .collection('notifications')
+          .orderBy('timestamp', descending: true)
+          .limit(100)
+          .get();
+
+      return snapshot.docs
+          .map((doc) => AppNotification.fromFirestore(doc.data()))
+          .toList();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Failed to get user notifications: $e');
+      }
+      return [];
+    }
+  }
+
+  /// Save user notifications
+  Future<void> saveUserNotifications(String userId, List<AppNotification> notifications) async {
+    try {
+      final batch = _firestore.batch();
+      final userNotificationsRef = _firestore
+          .collection(AppConstants.usersCollection)
+          .doc(userId)
+          .collection('notifications');
+
+      // Clear existing notifications
+      final existingDocs = await userNotificationsRef.get();
+      for (final doc in existingDocs.docs) {
+        batch.delete(doc.reference);
+      }
+
+      // Add new notifications
+      for (final notification in notifications.take(100)) { // Keep only last 100
+        final docRef = userNotificationsRef.doc(notification.id);
+        batch.set(docRef, notification.toFirestore());
+      }
+
+      await batch.commit();
+
+      if (kDebugMode) {
+        print('Saved ${notifications.length} notifications for user $userId');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Failed to save user notifications: $e');
+      }
+      throw Exception('Failed to save user notifications: $e');
+    }
+  }
+
+  /// Get user notification preferences
+  Future<Map<String, bool>?> getUserNotificationPreferences(String userId) async {
+    try {
+      final doc = await _firestore
+          .collection(AppConstants.usersCollection)
+          .doc(userId)
+          .get();
+
+      final data = doc.data();
+      if (data != null && data.containsKey('notificationPreferences')) {
+        return Map<String, bool>.from(data['notificationPreferences'] as Map);
+      }
+
+      return null; // Will use defaults
+    } catch (e) {
+      if (kDebugMode) {
+        print('Failed to get notification preferences: $e');
+      }
+      return null;
+    }
+  }
+
+  /// Save user notification preferences
+  Future<void> saveUserNotificationPreferences(String userId, Map<String, bool> preferences) async {
+    try {
+      await _firestore
+          .collection(AppConstants.usersCollection)
+          .doc(userId)
+          .update({
+        'notificationPreferences': preferences,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      if (kDebugMode) {
+        print('Saved notification preferences for user $userId');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Failed to save notification preferences: $e');
+      }
+      throw Exception('Failed to save notification preferences: $e');
     }
   }
 }

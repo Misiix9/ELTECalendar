@@ -1,13 +1,21 @@
 // File: lib/screens/calendar/calendar_main_screen.dart
-// Purpose: Main calendar screen stub for project initialization
-// Step: 1.1 - Initialize Flutter Project
+// Purpose: Main calendar screen with complete calendar interface
+// Step: 4.6 - Complete Calendar Interface Implementation
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../config/theme_config.dart';
 import '../../config/localization_config.dart';
+import '../../services/calendar_service.dart';
+import '../../services/semester_service.dart';
+import '../../widgets/calendar_widgets/daily_calendar_view.dart';
+import '../../widgets/calendar_widgets/weekly_calendar_view.dart';
+import '../../widgets/calendar_widgets/monthly_calendar_view.dart';
+import '../import/excel_import_screen.dart';
+import '../settings/semester_management_screen.dart';
+import '../../widgets/common_widgets/notification_badge.dart';
 
-/// Main calendar screen - placeholder implementation
-/// Will be fully implemented in Step 4: Calendar Interface
+/// Main calendar screen with complete calendar interface
 class CalendarMainScreen extends StatefulWidget {
   const CalendarMainScreen({super.key});
 
@@ -16,174 +24,311 @@ class CalendarMainScreen extends StatefulWidget {
 }
 
 class _CalendarMainScreenState extends State<CalendarMainScreen> {
-  int _selectedViewIndex = 1; // Default to weekly view
-  final List<String> _viewTypes = ['Daily', 'Weekly', 'Monthly'];
-
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
     
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(localizations?.calendar ?? 'Calendar'),
-        actions: [
-          // View selector
-          PopupMenuButton<int>(
-            onSelected: (index) {
-              setState(() {
-                _selectedViewIndex = index;
-              });
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 0,
-                child: Text(localizations?.getString('dailyView') ?? 'Daily View'),
-              ),
-              PopupMenuItem(
-                value: 1,
-                child: Text(localizations?.getString('weeklyView') ?? 'Weekly View'),
-              ),
-              PopupMenuItem(
-                value: 2,
-                child: Text(localizations?.getString('monthlyView') ?? 'Monthly View'),
-              ),
-            ],
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
+    return Consumer<CalendarService>(
+      builder: (context, calendarService, child) {
+        return Scaffold(
+          appBar: _buildAppBar(context, localizations, calendarService),
+          body: _buildCalendarView(calendarService),
+          
+          // Floating action button for importing Excel
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: _navigateToImportScreen,
+            backgroundColor: ThemeConfig.primaryDarkBlue,
+            foregroundColor: ThemeConfig.lightBackground,
+            icon: const Icon(Icons.upload_file),
+            label: Text(localizations?.getString('importExcel') ?? 'Import Excel'),
+          ),
+          
+          // Bottom navigation
+          bottomNavigationBar: _buildBottomNavigation(context, localizations),
+        );
+      },
+    );
+  }
+  
+  /// Build app bar with view selector and actions
+  AppBar _buildAppBar(BuildContext context, AppLocalizations? localizations, CalendarService calendarService) {
+    return AppBar(
+      title: Text(localizations?.calendar ?? 'Calendar'),
+      backgroundColor: ThemeConfig.lightBackground,
+      foregroundColor: ThemeConfig.primaryDarkBlue,
+      elevation: 0,
+      actions: [
+        // Notification badge
+        const NotificationBadge(),
+        
+        // Today button
+        TextButton.icon(
+          onPressed: calendarService.goToToday,
+          icon: const Icon(Icons.today, size: 18),
+          label: const Text('Today'),
+          style: TextButton.styleFrom(
+            foregroundColor: ThemeConfig.primaryDarkBlue,
+          ),
+        ),
+        
+        // View selector
+        PopupMenuButton<CalendarViewType>(
+          onSelected: (viewType) {
+            calendarService.setViewType(viewType);
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: CalendarViewType.daily,
               child: Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(_viewTypes[_selectedViewIndex]),
-                  const Icon(Icons.arrow_drop_down),
+                  const Icon(Icons.view_day, size: 18),
+                  const SizedBox(width: 8),
+                  const Text('Daily View'),
+                  if (calendarService.currentView == CalendarViewType.daily)
+                    Container(
+                      margin: const EdgeInsets.only(left: 8),
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: ThemeConfig.goldAccent,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
                 ],
               ),
             ),
-          ),
-          
-          // Settings button
-          IconButton(
-            onPressed: () {
-              // TODO: Navigate to settings
-            },
-            icon: const Icon(Icons.settings),
-          ),
-        ],
-      ),
-      
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Calendar view placeholder
-            Expanded(
-              child: Container(
-                margin: const EdgeInsets.all(16),
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: ThemeConfig.lightBackground,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: ThemeConfig.primaryDarkBlue.withOpacity(0.2),
-                  ),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.calendar_view_week,
-                      size: 64,
-                      color: ThemeConfig.primaryDarkBlue.withOpacity(0.5),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      '${_viewTypes[_selectedViewIndex]} View',
-                      style: Theme.of(context).textTheme.headlineMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      localizations?.getString('noClassesToday') ?? 'No classes to display',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: ThemeConfig.darkTextElements.withOpacity(0.7),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    
-                    // Placeholder information
+            PopupMenuItem(
+              value: CalendarViewType.weekly,
+              child: Row(
+                children: [
+                  const Icon(Icons.view_week, size: 18),
+                  const SizedBox(width: 8),
+                  const Text('Weekly View'),
+                  if (calendarService.currentView == CalendarViewType.weekly)
                     Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: ThemeConfig.goldAccent.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: ThemeConfig.goldAccent.withOpacity(0.3),
-                        ),
-                      ),
-                      child: const Text(
-                        'Placeholder Calendar Screen\n\nCalendar interface will be implemented in Step 4.\n\nThis includes:\n• Daily, Weekly, Monthly views\n• Course display with color coding\n• Current time indicator\n• Interactive course details',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: ThemeConfig.darkTextElements,
-                        ),
-                        textAlign: TextAlign.center,
+                      margin: const EdgeInsets.only(left: 8),
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: ThemeConfig.goldAccent,
+                        shape: BoxShape.circle,
                       ),
                     ),
-                  ],
-                ),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: CalendarViewType.monthly,
+              child: Row(
+                children: [
+                  const Icon(Icons.view_month, size: 18),
+                  const SizedBox(width: 8),
+                  const Text('Monthly View'),
+                  if (calendarService.currentView == CalendarViewType.monthly)
+                    Container(
+                      margin: const EdgeInsets.only(left: 8),
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: ThemeConfig.goldAccent,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                ],
               ),
             ),
           ],
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(_getViewIcon(calendarService.currentView)),
+                const SizedBox(width: 4),
+                Text(_getViewName(calendarService.currentView)),
+                const Icon(Icons.arrow_drop_down),
+              ],
+            ),
+          ),
         ),
-      ),
-      
-      // Floating action button for importing Excel
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // TODO: Navigate to Excel import screen
-          _showImportDialog();
-        },
-        icon: const Icon(Icons.upload_file),
-        label: Text(localizations?.getString('importExcel') ?? 'Import Excel'),
-      ),
-      
-      // Bottom navigation for future features
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: 0,
-        selectedItemColor: ThemeConfig.primaryDarkBlue,
-        unselectedItemColor: ThemeConfig.darkTextElements.withOpacity(0.6),
-        items: [
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.calendar_today),
-            label: localizations?.calendar ?? 'Calendar',
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.school),
-            label: localizations?.courses ?? 'Courses',
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.settings),
-            label: localizations?.settings ?? 'Settings',
-          ),
-        ],
-      ),
+        
+        // Semester selector
+        Consumer<SemesterService>(
+          builder: (context, semesterService, child) {
+            final semesters = semesterService.availableSemesters;
+            
+            if (semesters.isEmpty) {
+              return const SizedBox.shrink();
+            }
+            
+            return PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'manage') {
+                  _navigateToSemesterManagement(context);
+                } else {
+                  calendarService.setCurrentSemester(value);
+                }
+              },
+              itemBuilder: (context) => [
+                ...semesters.map((semester) {
+                  return PopupMenuItem(
+                    value: semester.id,
+                    child: Row(
+                      children: [
+                        Icon(
+                          calendarService.currentSemester == semester.id 
+                              ? Icons.check_circle 
+                              : Icons.circle_outlined,
+                          size: 16,
+                          color: calendarService.currentSemester == semester.id 
+                              ? ThemeConfig.goldAccent
+                              : ThemeConfig.darkTextElements.withOpacity(0.5),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            semester.displayName,
+                            style: TextStyle(
+                              fontWeight: calendarService.currentSemester == semester.id 
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+                const PopupMenuDivider(),
+                const PopupMenuItem(
+                  value: 'manage',
+                  child: Row(
+                    children: [
+                      Icon(Icons.settings, size: 16, color: ThemeConfig.primaryDarkBlue),
+                      SizedBox(width: 8),
+                      Text('Manage Semesters'),
+                    ],
+                  ),
+                ),
+              ],
+              child: const Padding(
+                padding: EdgeInsets.all(12.0),
+                child: Icon(Icons.school),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
-
-  /// Show import dialog placeholder
-  void _showImportDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Import Excel File'),
-        content: const Text(
-          'Excel import functionality will be implemented in Step 3.\n\nThis will include:\n• File picker for .xlsx files\n• Excel validation and parsing\n• Course schedule extraction\n• Semester assignment',
+  
+  /// Build calendar view based on selected type
+  Widget _buildCalendarView(CalendarService calendarService) {
+    switch (calendarService.currentView) {
+      case CalendarViewType.daily:
+        return const DailyCalendarView();
+      case CalendarViewType.weekly:
+        return const WeeklyCalendarView();
+      case CalendarViewType.monthly:
+        return const MonthlyCalendarView();
+    }
+  }
+  
+  /// Build bottom navigation
+  Widget _buildBottomNavigation(BuildContext context, AppLocalizations? localizations) {
+    return BottomNavigationBar(
+      type: BottomNavigationBarType.fixed,
+      currentIndex: 0,
+      selectedItemColor: ThemeConfig.primaryDarkBlue,
+      unselectedItemColor: ThemeConfig.darkTextElements.withOpacity(0.6),
+      items: [
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.calendar_today),
+          label: localizations?.calendar ?? 'Calendar',
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.school),
+          label: localizations?.courses ?? 'Courses',
+        ),
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.settings),
+          label: localizations?.settings ?? 'Settings',
+        ),
+      ],
+      onTap: (index) {
+        // Handle bottom navigation taps
+        switch (index) {
+          case 0:
+            // Already on calendar - do nothing
+            break;
+          case 1:
+            // Navigate to courses list
+            Navigator.of(context).pushNamed('/courses');
+            break;
+          case 2:
+            // Navigate to semester management (settings)
+            _navigateToSemesterManagement(context);
+            break;
+        }
+      },
+    );
+  }
+  
+  /// Get view icon for current view type
+  IconData _getViewIcon(CalendarViewType viewType) {
+    switch (viewType) {
+      case CalendarViewType.daily:
+        return Icons.view_day;
+      case CalendarViewType.weekly:
+        return Icons.view_week;
+      case CalendarViewType.monthly:
+        return Icons.view_month;
+    }
+  }
+  
+  /// Get view name for current view type
+  String _getViewName(CalendarViewType viewType) {
+    switch (viewType) {
+      case CalendarViewType.daily:
+        return 'Daily';
+      case CalendarViewType.weekly:
+        return 'Weekly';
+      case CalendarViewType.monthly:
+        return 'Monthly';
+    }
+  }
+
+  /// Navigate to Excel import screen
+  void _navigateToImportScreen() async {
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) => const ExcelImportScreen(),
+      ),
+    );
+
+    // If import was successful, show a success message
+    if (result == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Courses imported successfully!'),
+          backgroundColor: Colors.green.shade600,
+          action: SnackBarAction(
+            label: 'View',
+            textColor: Colors.white,
+            onPressed: () {
+              // TODO: Scroll to today or refresh calendar view
+            },
           ),
-        ],
+        ),
+      );
+    }
+  }
+
+  /// Navigate to semester management screen
+  void _navigateToSemesterManagement(BuildContext context) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const SemesterManagementScreen(),
       ),
     );
   }

@@ -1,8 +1,9 @@
 // File: lib/main.dart
-// Purpose: Main entry point for the ELTE Calendar application
-// Step: 1.1 - Initialize Flutter Project
+// Purpose: Main entry point for the ELTE Calendar application with complete authentication flow
+// Step: 2.2 - Complete Authentication System Implementation
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
@@ -12,9 +13,32 @@ import 'config/firebase_config.dart';
 import 'config/theme_config.dart';
 import 'config/localization_config.dart';
 import 'services/auth_service.dart';
+import 'services/firebase_service.dart';
 import 'services/semester_service.dart';
+import 'services/calendar_service.dart';
+import 'services/notification_service.dart';
+import 'services/export_service.dart';
+import 'services/connectivity_service.dart';
+import 'services/sync_service.dart';
 import 'screens/auth/login_screen.dart';
+import 'screens/auth/register_screen.dart';
+import 'screens/auth/forgot_password_screen.dart';
+import 'screens/auth/email_verification_screen.dart';
 import 'screens/calendar/calendar_main_screen.dart';
+import 'screens/import/excel_import_screen.dart';
+import 'screens/settings/semester_management_screen.dart';
+import 'screens/courses/course_list_screen.dart';
+import 'screens/courses/course_detail_screen.dart';
+import 'screens/courses/course_edit_screen.dart';
+import 'screens/notifications/notifications_screen.dart';
+import 'screens/settings/notification_settings_screen.dart';
+import 'screens/settings/sync_settings_screen.dart';
+import 'screens/export/export_screen.dart';
+import 'screens/export/export_history_screen.dart';
+import 'widgets/common_widgets/auth_wrapper.dart';
+import 'models/user_model.dart';
+import 'models/course_model.dart';
+import 'models/sync_model.dart';
 
 /// Main application entry point
 /// Initializes Firebase, Hive local storage, and app configuration
@@ -32,7 +56,14 @@ void main() async {
     await Hive.initFlutter();
     
     // Register Hive adapters for custom objects
-    // TODO: Register Course and ScheduleSlot adapters when models are created
+    // Note: Adapters will be generated when running 'dart run build_runner build'
+    // TODO: Uncomment when adapters are generated
+    // Hive.registerAdapter(StudentUserAdapter());
+    // Hive.registerAdapter(CourseAdapter());
+    // Hive.registerAdapter(ScheduleSlotAdapter());
+    // Hive.registerAdapter(SyncStatusAdapter());
+    // Hive.registerAdapter(SyncMetadataAdapter());
+    // Hive.registerAdapter(SyncQueueItemAdapter());
     
     // Run the application
     runApp(const ELTECalendarApp());
@@ -41,99 +72,204 @@ void main() async {
     debugPrint('Error initializing app: $error');
     
     // Run app with error state
-    runApp(const ErrorApp());
+    runApp(ErrorApp(error: error.toString()));
   }
 }
 
 /// Main application widget with proper configuration and providers
-class ELTECalendarApp extends StatelessWidget {
+class ELTECalendarApp extends StatefulWidget {
   const ELTECalendarApp({super.key});
 
   @override
+  State<ELTECalendarApp> createState() => _ELTECalendarAppState();
+}
+
+class _ELTECalendarAppState extends State<ELTECalendarApp> {
+  late AuthService _authService;
+  late FirebaseService _firebaseService;
+  late SemesterService _semesterService;
+  late CalendarService _calendarService;
+  late NotificationService _notificationService;
+  late ExportService _exportService;
+  late ConnectivityService _connectivityService;
+  late SyncService _syncService;
+  bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeServices();
+  }
+
+  /// Initialize all required services
+  Future<void> _initializeServices() async {
+    try {
+      _authService = AuthService();
+      _firebaseService = FirebaseService();
+      _connectivityService = ConnectivityService();
+      _semesterService = SemesterService();
+      _calendarService = CalendarService(_firebaseService, _authService, _semesterService);
+      _notificationService = NotificationService(_authService, _firebaseService, _calendarService, _semesterService);
+      _exportService = ExportService(_calendarService, _semesterService, _authService);
+      _syncService = SyncService(_connectivityService, _firebaseService, _authService);
+
+      // Initialize services in order
+      await _firebaseService.initialize();
+      await _connectivityService.initialize();
+      await _authService.initialize();
+      await _semesterService.initialize();
+      await _notificationService.initialize();
+      await _syncService.initialize();
+
+      if (mounted) {
+        setState(() {
+          _isInitialized = true;
+        });
+      }
+    } catch (e) {
+      debugPrint('Failed to initialize services: $e');
+      // Continue with app startup even if some services fail
+      if (mounted) {
+        setState(() {
+          _isInitialized = true;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (!_isInitialized) {
+      return const MaterialApp(
+        home: AuthLoadingScreen(),
+        debugShowCheckedModeBanner: false,
+      );
+    }
+
     return MultiProvider(
       providers: [
         // Authentication service provider
-        ChangeNotifierProvider(create: (_) => AuthService()),
+        ChangeNotifierProvider.value(value: _authService),
+        
+        // Firebase service provider
+        Provider.value(value: _firebaseService),
         
         // Semester management service provider
-        ChangeNotifierProvider(create: (_) => SemesterService()),
+        ChangeNotifierProvider.value(value: _semesterService),
         
-        // TODO: Add other service providers as they are implemented
-        // - ExcelParserService
-        // - NotificationService
-        // - CalendarService
+        // Calendar service provider
+        ChangeNotifierProvider.value(value: _calendarService),
+        
+        // Notification service provider
+        ChangeNotifierProvider.value(value: _notificationService),
+        
+        // Export service provider
+        ChangeNotifierProvider.value(value: _exportService),
+        
+        // Connectivity service provider
+        ChangeNotifierProvider.value(value: _connectivityService),
+        
+        // Sync service provider
+        ChangeNotifierProvider.value(value: _syncService),
       ],
-      child: Consumer<AuthService>(
-        builder: (context, authService, _) {
-          return MaterialApp(
-            // Application metadata
-            title: 'ELTE Calendar',
-            debugShowCheckedModeBanner: false,
-            
-            // Theme configuration using specified color palette
-            theme: ThemeConfig.lightTheme,
-            darkTheme: ThemeConfig.darkTheme,
-            themeMode: ThemeMode.system, // Respect system theme preference
-            
-            // Localization configuration
-            localizationsDelegates: const [
-              AppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            supportedLocales: AppLocalizations.supportedLocales,
-            locale: const Locale('hu'), // Default to Hungarian
-            
-            // Initial route based on authentication state
-            home: FutureBuilder<bool>(
-              future: authService.isLoggedIn(),
-              builder: (context, snapshot) {
-                // Show loading indicator while checking auth state
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Scaffold(
-                    backgroundColor: Color(0xFF03284F), // Primary dark blue
-                    body: Center(
-                      child: CircularProgressIndicator(
-                        color: Color(0xFFC6A882), // Gold accent
-                      ),
-                    ),
-                  );
-                }
-                
-                // Navigate based on authentication state
-                if (snapshot.data == true) {
-                  return const CalendarMainScreen();
-                } else {
-                  return const LoginScreen();
-                }
-              },
-            ),
-            
-            // Route configuration
-            routes: {
-              '/login': (context) => const LoginScreen(),
-              '/calendar': (context) => const CalendarMainScreen(),
-              // TODO: Add additional routes as screens are implemented
-            },
-            
-            // Error handling for route navigation
-            onUnknownRoute: (settings) {
-              return MaterialPageRoute(
-                builder: (context) => const LoginScreen(),
-              );
-            },
+      child: MaterialApp(
+        // Application metadata
+        title: 'ELTE Calendar',
+        debugShowCheckedModeBanner: false,
+        
+        // Theme configuration using specified color palette
+        theme: ThemeConfig.lightTheme,
+        darkTheme: ThemeConfig.darkTheme,
+        themeMode: ThemeMode.system, // Respect system theme preference
+        
+        // Localization configuration
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('hu'), // Default to Hungarian as specified
+        
+        // Authentication wrapper handles routing based on auth state
+        home: const AuthWrapper(),
+        
+        // Route configuration with all authentication screens
+        routes: {
+          '/': (context) => const AuthWrapper(),
+          '/login': (context) => const LoginScreen(),
+          '/register': (context) => const RegisterScreen(),
+          '/forgot-password': (context) => const ForgotPasswordScreen(),
+          '/email-verification': (context) => const EmailVerificationScreen(),
+          '/calendar': (context) => const AuthGuard(child: CalendarMainScreen()),
+          '/import': (context) => const AuthGuard(child: ExcelImportScreen()),
+          '/semester-management': (context) => const AuthGuard(child: SemesterManagementScreen()),
+          '/courses': (context) => const AuthGuard(child: CourseListScreen()),
+          '/course-create': (context) => const AuthGuard(child: CourseEditScreen()),
+          '/notifications': (context) => const AuthGuard(child: NotificationsScreen()),
+          '/notification-settings': (context) => const AuthGuard(child: NotificationSettingsScreen()),
+          '/sync-settings': (context) => const AuthGuard(child: SyncSettingsScreen()),
+          '/export': (context) => const AuthGuard(child: ExportScreen()),
+          '/export-history': (context) => const AuthGuard(child: ExportHistoryScreen()),
+        },
+        
+        // Initial route
+        initialRoute: '/',
+        
+        // Error handling for route navigation
+        onUnknownRoute: (settings) {
+          return MaterialPageRoute(
+            builder: (context) => const AuthWrapper(),
           );
         },
+        
+        // Global navigation observer for debugging
+        navigatorObservers: [
+          if (kDebugMode) AuthNavigationObserver(),
+        ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _authService.dispose();
+    _calendarService.dispose();
+    _notificationService.dispose();
+    _exportService.dispose();
+    _connectivityService.dispose();
+    _syncService.dispose();
+    super.dispose();
+  }
+}
+
+/// Navigation observer for debugging authentication flows
+class AuthNavigationObserver extends NavigatorObserver {
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPush(route, previousRoute);
+    debugPrint('Navigated to: ${route.settings.name}');
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPop(route, previousRoute);
+    debugPrint('Popped from: ${route.settings.name}');
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+    debugPrint('Replaced ${oldRoute?.settings.name} with ${newRoute?.settings.name}');
   }
 }
 
 /// Error application widget shown when initialization fails
 class ErrorApp extends StatelessWidget {
-  const ErrorApp({super.key});
+  final String? error;
+  
+  const ErrorApp({super.key, this.error});
 
   @override
   Widget build(BuildContext context) {

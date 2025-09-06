@@ -3,7 +3,6 @@
 // Usage: dart run scripts/verify_firebase_setup.dart
 
 import 'dart:io';
-import 'dart:convert';
 
 void main() async {
   print('🔥 ELTE Calendar - Firebase Setup Verification');

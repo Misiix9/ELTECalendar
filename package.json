@@ -1,7 +1,9 @@
 {
   "dependencies": {
     "@dataconnect/generated": "file:src/dataconnect-generated",
-    "firebase": "^12.2.1"
+    "firebase": "^12.2.1",
+    "flutter": "^0.0.5",
+    "intl": "^1.2.5"
   },
   "name": "eltecalendar",
   "version": "1.0.0",
@@ -16,5 +18,14 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs"
+  "type": "commonjs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Misiix9/ELTECalendar.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Misiix9/ELTECalendar/issues"
+  },
+  "homepage": "https://github.com/Misiix9/ELTECalendar#readme",
+  "devDependencies": {}
 }

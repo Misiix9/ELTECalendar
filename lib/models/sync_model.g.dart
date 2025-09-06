@@ -1,0 +1,183 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'sync_model.dart';
+
+// **************************************************************************
+// TypeAdapterGenerator
+// **************************************************************************
+
+class SyncMetadataAdapter extends TypeAdapter<SyncMetadata> {
+  @override
+  final int typeId = 11;
+
+  @override
+  SyncMetadata read(BinaryReader reader) {
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
+    return SyncMetadata(
+      id: fields[0] as String,
+      dataType: fields[1] as String,
+      status: fields[2] as SyncStatus,
+      lastModified: fields[3] as DateTime,
+      lastSyncAttempt: fields[4] as DateTime?,
+      lastSuccessfulSync: fields[5] as DateTime?,
+      serverVersion: fields[6] as String?,
+      retryCount: fields[7] as int,
+      errorMessage: fields[8] as String?,
+      conflictData: (fields[9] as Map?)?.cast<String, dynamic>(),
+      isDirty: fields[10] as bool,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, SyncMetadata obj) {
+    writer
+      ..writeByte(11)
+      ..writeByte(0)
+      ..write(obj.id)
+      ..writeByte(1)
+      ..write(obj.dataType)
+      ..writeByte(2)
+      ..write(obj.status)
+      ..writeByte(3)
+      ..write(obj.lastModified)
+      ..writeByte(4)
+      ..write(obj.lastSyncAttempt)
+      ..writeByte(5)
+      ..write(obj.lastSuccessfulSync)
+      ..writeByte(6)
+      ..write(obj.serverVersion)
+      ..writeByte(7)
+      ..write(obj.retryCount)
+      ..writeByte(8)
+      ..write(obj.errorMessage)
+      ..writeByte(9)
+      ..write(obj.conflictData)
+      ..writeByte(10)
+      ..write(obj.isDirty);
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SyncMetadataAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}
+
+class SyncQueueItemAdapter extends TypeAdapter<SyncQueueItem> {
+  @override
+  final int typeId = 12;
+
+  @override
+  SyncQueueItem read(BinaryReader reader) {
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
+    return SyncQueueItem(
+      id: fields[0] as String,
+      operation: fields[1] as String,
+      dataType: fields[2] as String,
+      dataId: fields[3] as String,
+      data: (fields[4] as Map).cast<String, dynamic>(),
+      createdAt: fields[5] as DateTime,
+      priority: fields[6] as int,
+      retryCount: fields[7] as int,
+      lastAttempt: fields[8] as DateTime?,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, SyncQueueItem obj) {
+    writer
+      ..writeByte(9)
+      ..writeByte(0)
+      ..write(obj.id)
+      ..writeByte(1)
+      ..write(obj.operation)
+      ..writeByte(2)
+      ..write(obj.dataType)
+      ..writeByte(3)
+      ..write(obj.dataId)
+      ..writeByte(4)
+      ..write(obj.data)
+      ..writeByte(5)
+      ..write(obj.createdAt)
+      ..writeByte(6)
+      ..write(obj.priority)
+      ..writeByte(7)
+      ..write(obj.retryCount)
+      ..writeByte(8)
+      ..write(obj.lastAttempt);
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SyncQueueItemAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}
+
+class SyncStatusAdapter extends TypeAdapter<SyncStatus> {
+  @override
+  final int typeId = 10;
+
+  @override
+  SyncStatus read(BinaryReader reader) {
+    switch (reader.readByte()) {
+      case 0:
+        return SyncStatus.synced;
+      case 1:
+        return SyncStatus.pending;
+      case 2:
+        return SyncStatus.conflict;
+      case 3:
+        return SyncStatus.error;
+      case 4:
+        return SyncStatus.local;
+      default:
+        return SyncStatus.synced;
+    }
+  }
+
+  @override
+  void write(BinaryWriter writer, SyncStatus obj) {
+    switch (obj) {
+      case SyncStatus.synced:
+        writer.writeByte(0);
+        break;
+      case SyncStatus.pending:
+        writer.writeByte(1);
+        break;
+      case SyncStatus.conflict:
+        writer.writeByte(2);
+        break;
+      case SyncStatus.error:
+        writer.writeByte(3);
+        break;
+      case SyncStatus.local:
+        writer.writeByte(4);
+        break;
+    }
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SyncStatusAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}

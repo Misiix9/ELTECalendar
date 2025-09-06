@@ -1,77 +1,10 @@
-// Firebase Storage Security Rules for ELTE Calendar
-// Following the technical specification for Excel file uploads
-// Users can only access their own uploaded files
-
 rules_version = '2';
+
+// Craft rules based on data in your Firestore database
+// allow write: if firestore.get(
+//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
 service firebase.storage {
   match /b/{bucket}/o {
-    
-    // Excel imports stored by user and semester
-    // Path: excel-imports/{userId}/{semesterId}/{fileName}
-    match /excel-imports/{userId}/{semesterId}/{fileName} {
-      // Allow read/write only for authenticated user's own files
-      allow read, write: if request.auth != null 
-        && request.auth.uid == userId;
-      
-      // Additional validation for Excel file uploads
-      allow create: if request.auth != null 
-        && request.auth.uid == userId
-        && isValidExcelFile()
-        && resource == null; // File doesn't exist yet
-      
-      allow update: if request.auth != null 
-        && request.auth.uid == userId
-        && isValidExcelFile();
-    }
-    
-    // Temporary uploads during Excel processing
-    // Path: temp-uploads/{userId}/{fileName}
-    match /temp-uploads/{userId}/{fileName} {
-      // Allow read/write for authenticated user's temp files
-      allow read, write: if request.auth != null 
-        && request.auth.uid == userId;
-      
-      // Allow creation with file validation
-      allow create: if request.auth != null 
-        && request.auth.uid == userId
-        && isValidExcelFile()
-        && request.resource.size < 10 * 1024 * 1024; // Max 10MB
-    }
-    
-    // User profile images (for future use)
-    match /profile-images/{userId}/{fileName} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null 
-        && request.auth.uid == userId
-        && isValidImageFile()
-        && request.resource.size < 5 * 1024 * 1024; // Max 5MB
-    }
-    
-    // Public assets (app icons, default images, etc.)
-    match /public/{fileName} {
-      allow read: if true;
-      allow write: if false; // Admin only - implement admin check later
-    }
-    
-    // Helper function to validate Excel files
-    function isValidExcelFile() {
-      return request.resource != null
-        && request.resource.contentType != null
-        && (request.resource.contentType.matches('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-           || request.resource.contentType.matches('application/vnd.ms-excel'))
-        && request.resource.size > 0
-        && request.resource.size < 50 * 1024 * 1024; // Max 50MB for Excel files
-    }
-    
-    // Helper function to validate image files
-    function isValidImageFile() {
-      return request.resource != null
-        && request.resource.contentType != null
-        && request.resource.contentType.matches('image/.*')
-        && request.resource.size > 0;
-    }
-    
-    // Deny all other access by default
     match /{allPaths=**} {
       allow read, write: if false;
     }

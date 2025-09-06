@@ -3,7 +3,6 @@
 // Step: 1.1 - Initialize Flutter Project
 
 import 'package:flutter/widgets.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 
 /// Application localization configuration
 /// Supports Hungarian (default), English, and German as specified

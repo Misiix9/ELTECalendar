@@ -8,7 +8,12 @@
       "Bash(snap install:*)",
       "Bash(pacman:*)",
       "Bash(sudo pacman:*)",
-      "mcp__sequential-thinking__sequentialthinking"
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(flutter run:*)",
+      "Bash(wget:*)",
+      "Bash(flutter pub:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(dart run:*)"
     ],
     "deny": [],
     "ask": []
