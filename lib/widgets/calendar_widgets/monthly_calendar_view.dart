@@ -220,22 +220,21 @@ class _MonthlyCalendarViewState extends State<MonthlyCalendarView> {
               bottom: 1,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ...List.generate(
-                    courses.length > 3 ? 3 : courses.length,
-                    (index) {
-                      final course = courses[index] as Course;
-                      return Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 1),
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: course.displayColor,
-                          shape: BoxShape.circle,
-                        ),
-                      );
-                    },
-                  ),
+                children: List.generate(
+                  courses.length > 3 ? 3 : courses.length,
+                  (index) {
+                    final course = courses[index];
+                    return Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 1),
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: course.displayColor,
+                        shape: BoxShape.circle,
+                      ),
+                    );
+                  },
+                )..add(
                   if (courses.length > 3)
                     Container(
                       margin: const EdgeInsets.only(left: 2),
@@ -248,7 +247,7 @@ class _MonthlyCalendarViewState extends State<MonthlyCalendarView> {
                         ),
                       ),
                     ),
-                ],
+                ),
               ),
             );
           },
