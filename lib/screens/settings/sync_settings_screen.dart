@@ -113,7 +113,7 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
                         onChanged: (value) {
                           // TODO: Implement auto-sync toggle
                         },
-                        activeColor: ThemeConfig.primaryDarkBlue,
+                        activeThumbColor: ThemeConfig.primaryDarkBlue,
                       ),
                     ),
                     
@@ -126,7 +126,7 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
                         onChanged: (value) {
                           // TODO: Implement Wi-Fi only toggle
                         },
-                        activeColor: ThemeConfig.primaryDarkBlue,
+                        activeThumbColor: ThemeConfig.primaryDarkBlue,
                       ),
                     ),
                     
@@ -139,7 +139,7 @@ class _SyncSettingsScreenState extends State<SyncSettingsScreen> {
                         onChanged: (value) {
                           // TODO: Implement battery optimization toggle
                         },
-                        activeColor: ThemeConfig.primaryDarkBlue,
+                        activeThumbColor: ThemeConfig.primaryDarkBlue,
                       ),
                     ),
                   ],

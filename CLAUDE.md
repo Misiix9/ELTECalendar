@@ -50,7 +50,7 @@ The Excel parser MUST handle files with these exact Hungarian column headers:
 - SZE = Wednesday (Szerda)
 - CS = Thursday (Csütörtök)
 - P = Friday (Péntek)
-- SZ (after P) = Saturday (Szombat)
+- SZO (after P) = Saturday (Szombat)
 
 ### 4. CODE QUALITY STANDARDS
 

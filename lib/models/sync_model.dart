@@ -2,7 +2,6 @@
 // Purpose: Synchronization models for offline support and data sync management
 // Step: 9.1 - Sync Model Implementation
 
-import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 
 part 'sync_model.g.dart';

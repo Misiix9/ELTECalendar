@@ -129,7 +129,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                 onChanged: (value) {
                   notificationService.toggleNotifications(value);
                 },
-                activeColor: ThemeConfig.primaryDarkBlue,
+                activeThumbColor: ThemeConfig.primaryDarkBlue,
               ),
             ],
           ),
@@ -266,7 +266,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
               notificationService.updateNotificationPreference(type, value);
             }
           : null,
-        activeColor: ThemeConfig.primaryDarkBlue,
+        activeThumbColor: ThemeConfig.primaryDarkBlue,
       ),
     );
   }
