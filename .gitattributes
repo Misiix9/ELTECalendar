@@ -1,0 +1,4 @@
+*.dart linguist-language=Dart
+*.yaml linguist-language=YAML
+functions/* linguist-detectable=false
+functions/* linguist-documentation
