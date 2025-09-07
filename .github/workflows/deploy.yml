@@ -14,6 +14,11 @@ concurrency:
   group: "pages"
   cancel-in-progress: false
 
+env:
+  # Explicitly disable Node.js detection
+  NODE_VERSION: ''
+  SKIP_INSTALL_SIMPLE_PROMPT: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,6 +27,12 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
     
+    - name: Remove functions directory temporarily 
+      run: |
+        if [ -d "functions" ]; then
+          mv functions functions_backup
+        fi
+    
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
@@ -29,17 +40,26 @@ jobs:
         channel: 'stable'
         cache: true
     
-    - name: Disable analytics
-      run: flutter config --no-analytics
+    - name: Verify Flutter installation
+      run: |
+        flutter doctor -v
+        flutter config --no-analytics
     
-    - name: Install Flutter dependencies
-      run: flutter pub get
+    - name: Clean and get dependencies
+      run: |
+        flutter clean
+        flutter pub get
     
     - name: Enable Flutter web
       run: flutter config --enable-web
     
     - name: Build Flutter web
-      run: flutter build web --release --base-href "/ELTECalendar/" --web-renderer canvaskit
+      run: flutter build web --release --base-href "/ELTECalendar/" --web-renderer canvaskit --verbose
+    
+    - name: Verify build output
+      run: |
+        ls -la build/web/
+        echo "Build completed successfully"
     
     - name: Add .nojekyll file (disable Jekyll processing)
       run: touch build/web/.nojekyll
@@ -47,8 +67,11 @@ jobs:
     - name: Copy index.html to 404.html (for SPA routing)
       run: cp build/web/index.html build/web/404.html
     
-    - name: Setup Pages
-      uses: actions/configure-pages@v4
+    - name: Restore functions directory
+      run: |
+        if [ -d "functions_backup" ]; then
+          mv functions_backup functions
+        fi
     
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
