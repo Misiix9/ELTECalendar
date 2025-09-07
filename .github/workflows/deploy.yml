@@ -27,12 +27,16 @@ jobs:
       with:
         flutter-version: '3.19.6'
         channel: 'stable'
+        cache: true
     
-    - name: Install dependencies
+    - name: Install Flutter dependencies
       run: flutter pub get
     
+    - name: Enable Flutter web
+      run: flutter config --enable-web
+    
     - name: Build Flutter web
-      run: flutter build web --release --base-href "/ELTECalendar/"
+      run: flutter build web --release --base-href "/ELTECalendar/" --web-renderer canvaskit
     
     - name: Add .nojekyll file (disable Jekyll processing)
       run: touch build/web/.nojekyll
