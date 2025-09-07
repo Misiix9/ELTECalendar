@@ -217,7 +217,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         // Confirm password field
         CustomTextField(
           controller: _confirmPasswordController,
-          labelText: localizations?.confirmPassword ?? 'Confirm Password',
+          labelText: 'Confirm Password',
           hintText: 'Confirm your password',
           prefixIcon: Icons.lock_outline,
           obscureText: _obscureConfirmPassword,
@@ -376,7 +376,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         
         // Google Sign-In button
         AuthButton(
-          text: localizations?.signInWithGoogle ?? 'Continue with Google',
+          text: 'Continue with Google',
           onPressed: _isLoading ? null : _handleGoogleSignIn,
           backgroundColor: Colors.white,
           textColor: ThemeConfig.darkTextElements,
@@ -389,7 +389,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         // Apple Sign-In button (iOS only)
         if (Theme.of(context).platform == TargetPlatform.iOS) ...[
           AuthButton(
-            text: localizations?.signInWithApple ?? 'Continue with Apple',
+            text: 'Continue with Apple',
             onPressed: _isLoading ? null : _handleAppleSignIn,
             backgroundColor: ThemeConfig.darkTextElements,
             textColor: ThemeConfig.lightBackground,
@@ -446,7 +446,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
 
       if (result.success) {
-        // Registration successful - navigate to calendar or show verification screen
+        // Registration successful - user is automatically signed in by Firebase
+        // AuthWrapper will handle navigation automatically
         if (mounted) {
           _showRegistrationSuccess();
         }
@@ -481,7 +482,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final result = await authService.signInWithGoogle();
 
       if (result.success) {
-        // Google sign-in successful - navigation handled by auth state changes
+        // Google sign-in successful - AuthWrapper will handle navigation automatically
         if (mounted) {
           _showRegistrationSuccess();
         }
@@ -516,7 +517,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final result = await authService.signInWithApple();
 
       if (result.success) {
-        // Apple sign-in successful - navigation handled by auth state changes
+        // Apple sign-in successful - AuthWrapper will handle navigation automatically
         if (mounted) {
           _showRegistrationSuccess();
         }
@@ -559,18 +560,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ],
         ),
         content: const Text(
-          'Your account has been created successfully. You can now start using ELTE Calendar to manage your course schedules.',
+          'Your account has been created successfully. You will now be taken to the main application.',
         ),
         actions: [
           ElevatedButton(
             onPressed: () {
-              Navigator.of(context).pop(); // Close dialog
-              Navigator.of(context).pushReplacementNamed('/calendar');
+              Navigator.of(context).pop(); // Close dialog - AuthWrapper will handle navigation
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: ThemeConfig.primaryDarkBlue,
             ),
-            child: const Text('Get Started'),
+            child: const Text('Continue'),
           ),
         ],
       ),

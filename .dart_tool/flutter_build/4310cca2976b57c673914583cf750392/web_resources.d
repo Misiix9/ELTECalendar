@@ -1,0 +1,1 @@
+ /home/onxy/Documents/Programming/ELTECalendar/build/web/manifest.json:  /home/onxy/Documents/Programming/ELTECalendar/web/index.html /home/onxy/Documents/Programming/ELTECalendar/web/manifest.json

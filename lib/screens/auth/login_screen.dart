@@ -221,7 +221,7 @@ class _LoginScreenState extends State<LoginScreen> {
             
             // Forgot password link
             AuthTextButton(
-              text: localizations?.forgotPassword ?? 'Forgot Password?',
+              text: 'Forgot Password?',
               onPressed: _isLoading ? null : _navigateToForgotPassword,
               isUnderlined: true,
             ),
@@ -301,7 +301,7 @@ class _LoginScreenState extends State<LoginScreen> {
         
         // Google Sign-In button
         AuthButton(
-          text: localizations?.signInWithGoogle ?? 'Continue with Google',
+          text: 'Continue with Google',
           onPressed: _isLoading ? null : _handleGoogleSignIn,
           backgroundColor: Colors.white,
           textColor: ThemeConfig.darkTextElements,
@@ -314,7 +314,7 @@ class _LoginScreenState extends State<LoginScreen> {
         // Apple Sign-In button (iOS only)
         if (Theme.of(context).platform == TargetPlatform.iOS) ...[
           AuthButton(
-            text: localizations?.signInWithApple ?? 'Continue with Apple',
+            text: 'Continue with Apple',
             onPressed: _isLoading ? null : _handleAppleSignIn,
             backgroundColor: ThemeConfig.darkTextElements,
             textColor: ThemeConfig.lightBackground,
@@ -370,10 +370,8 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (result.success) {
-        // Login successful - navigation handled by auth state changes
-        if (mounted) {
-          Navigator.of(context).pushReplacementNamed('/calendar');
-        }
+        // Login successful - AuthWrapper will handle navigation automatically
+        // No need to manually navigate
       } else {
         setState(() {
           _errorMessage = result.message;
@@ -405,10 +403,8 @@ class _LoginScreenState extends State<LoginScreen> {
       final result = await authService.signInWithGoogle();
 
       if (result.success) {
-        // Google sign-in successful - navigation handled by auth state changes
-        if (mounted) {
-          Navigator.of(context).pushReplacementNamed('/calendar');
-        }
+        // Google sign-in successful - AuthWrapper will handle navigation automatically
+        // No need to manually navigate
       } else {
         setState(() {
           _errorMessage = result.message;
@@ -440,10 +436,8 @@ class _LoginScreenState extends State<LoginScreen> {
       final result = await authService.signInWithApple();
 
       if (result.success) {
-        // Apple sign-in successful - navigation handled by auth state changes
-        if (mounted) {
-          Navigator.of(context).pushReplacementNamed('/calendar');
-        }
+        // Apple sign-in successful - AuthWrapper will handle navigation automatically
+        // No need to manually navigate
       } else {
         setState(() {
           _errorMessage = result.message;

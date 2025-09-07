@@ -7,10 +7,8 @@ import 'package:provider/provider.dart';
 import '../../config/theme_config.dart';
 import '../../config/localization_config.dart';
 import '../../services/calendar_service.dart';
-import '../../services/semester_service.dart';
 import '../../models/course_model.dart';
-import '../../widgets/common_widgets/loading_indicator.dart';
-import '../../widgets/common_widgets/empty_state_widget.dart';
+import '../../models/course_type.dart';
 import 'course_detail_screen.dart';
 import 'course_edit_screen.dart';
 
@@ -257,15 +255,34 @@ class _CourseListScreenState extends State<CourseListScreen> {
     final courses = calendarService.courses;
     
     if (courses.isEmpty) {
-      return EmptyStateWidget(
-        icon: Icons.school_outlined,
-        title: localizations?.getString('noCoursesTitle') ?? 'No Courses',
-        message: localizations?.getString('noCoursesMessage') ?? 
-          'No courses found for the current semester. Import your schedule to get started.',
-        actionLabel: localizations?.getString('importSchedule') ?? 'Import Schedule',
-        onActionPressed: () {
-          Navigator.of(context).pushNamed('/import');
-        },
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.book_outlined,
+              size: 64,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No courses found',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Try adjusting your search or filter criteria',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade500,
+              ),
+            ),
+          ],
+        ),
       );
     }
 
@@ -276,19 +293,45 @@ class _CourseListScreenState extends State<CourseListScreen> {
     _applySorting(filteredCourses);
 
     if (filteredCourses.isEmpty && (_searchQuery.isNotEmpty || _selectedFilter != CourseFilterType.all)) {
-      return EmptyStateWidget(
-        icon: Icons.search_off,
-        title: localizations?.getString('noResultsTitle') ?? 'No Results',
-        message: localizations?.getString('noResultsMessage') ?? 'No courses match your search criteria.',
-        actionLabel: localizations?.getString('clearFilters') ?? 'Clear Filters',
-        onActionPressed: () {
-          setState(() {
-            _searchController.clear();
-            _searchQuery = '';
-            _selectedFilter = CourseFilterType.all;
-            _isSearching = false;
-          });
-        },
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off,
+              size: 64,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              localizations?.getString('noResultsTitle') ?? 'No Results',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              localizations?.getString('noResultsMessage') ?? 'No courses match your search criteria.',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade500,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _searchController.clear();
+                  _searchQuery = '';
+                  _selectedFilter = CourseFilterType.all;
+                });
+              },
+              child: Text(localizations?.getString('clearFilters') ?? 'Clear Filters'),
+            ),
+          ],
+        ),
       );
     }
 
@@ -308,8 +351,9 @@ class _CourseListScreenState extends State<CourseListScreen> {
       // Apply search filter
       if (_searchQuery.isNotEmpty) {
         final searchLower = _searchQuery.toLowerCase();
-        if (!course.name.toLowerCase().contains(searchLower) &&
-            !course.code.toLowerCase().contains(searchLower) &&
+        if (!course.courseName.toLowerCase().contains(searchLower) &&
+            !course.courseCode.toLowerCase().contains(searchLower) &&
+            !course.classCode.toLowerCase().contains(searchLower) &&
             !course.instructors.any((instructor) => 
               instructor.toLowerCase().contains(searchLower))) {
           return false;
@@ -318,15 +362,16 @@ class _CourseListScreenState extends State<CourseListScreen> {
 
       // Apply type filter
       if (_selectedFilter != CourseFilterType.all) {
+        final classTypeLower = course.classType.toLowerCase();
         switch (_selectedFilter) {
           case CourseFilterType.lecture:
-            return course.type == CourseType.lecture;
+            return classTypeLower.contains('előadás') || classTypeLower.contains('ea');
           case CourseFilterType.seminar:
-            return course.type == CourseType.seminar;
+            return classTypeLower.contains('szeminárium');
           case CourseFilterType.practical:
-            return course.type == CourseType.practical;
+            return classTypeLower.contains('gyakorlat') || classTypeLower.contains('gy');
           case CourseFilterType.laboratory:
-            return course.type == CourseType.laboratory;
+            return classTypeLower.contains('labor') || classTypeLower.contains('lb');
           case CourseFilterType.all:
             break;
         }
@@ -335,6 +380,7 @@ class _CourseListScreenState extends State<CourseListScreen> {
       return true;
     }).toList();
 
+    debugPrint('🔍 CourseList: Filtered ${courses.length} courses to ${filtered.length} courses');
     return filtered;
   }
 
@@ -348,10 +394,10 @@ class _CourseListScreenState extends State<CourseListScreen> {
         courses.sort((a, b) => a.code.compareTo(b.code));
         break;
       case CourseSortType.type:
-        courses.sort((a, b) => a.type.name.compareTo(b.type.name));
+        courses.sort((a, b) => CourseType.fromString(a.type)?.displayName.compareTo(CourseType.fromString(b.type)?.displayName ?? '') ?? 0);
         break;
       case CourseSortType.credits:
-        courses.sort((a, b) => (b.credits ?? 0).compareTo(a.credits ?? 0));
+        courses.sort((a, b) => b.credits.compareTo(a.credits));
         break;
     }
   }
@@ -377,15 +423,15 @@ class _CourseListScreenState extends State<CourseListScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: course.type.color.withOpacity(0.1),
+                      color: CourseType.fromString(course.classType)?.color.withOpacity(0.1) ?? Colors.grey.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      course.type.displayName,
+                      CourseType.fromString(course.classType)?.displayName ?? course.classType,
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
-                        color: course.type.color,
+                        color: CourseType.fromString(course.classType)?.color ?? Colors.grey,
                       ),
                     ),
                   ),
@@ -423,7 +469,7 @@ class _CourseListScreenState extends State<CourseListScreen> {
               
               // Course name
               Text(
-                course.name,
+                course.courseName,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -434,7 +480,7 @@ class _CourseListScreenState extends State<CourseListScreen> {
               
               // Course code
               Text(
-                course.code,
+                course.courseCode,
                 style: TextStyle(
                   fontSize: 14,
                   color: ThemeConfig.darkTextElements.withOpacity(0.7),
@@ -486,19 +532,18 @@ class _CourseListScreenState extends State<CourseListScreen> {
                     ],
                   ),
                   
-                  // Credits (if available)
-                  if (course.credits != null)
-                    Row(
-                      children: [
-                        Icon(Icons.school, size: 16, 
-                          color: ThemeConfig.darkTextElements.withOpacity(0.6)),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${course.credits} credits',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: ThemeConfig.darkTextElements.withOpacity(0.7),
-                          ),
+                  // Credits
+                  Row(
+                    children: [
+                      Icon(Icons.school, size: 16, 
+                        color: ThemeConfig.darkTextElements.withOpacity(0.6)),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${course.credits} credits',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: ThemeConfig.darkTextElements.withOpacity(0.7),
+                        ),
                         ),
                       ],
                     ),
@@ -567,7 +612,7 @@ class _CourseListScreenState extends State<CourseListScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Course'),
-        content: Text('Are you sure you want to delete "${course.name}"? This action cannot be undone.'),
+        content: Text('Are you sure you want to delete "${course.courseName}"? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -593,7 +638,7 @@ class _CourseListScreenState extends State<CourseListScreen> {
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Course "${course.name}" deleted'),
+          content: Text('Course "${course.courseName}" deleted'),
           backgroundColor: Colors.red.shade600,
           action: SnackBarAction(
             label: 'Undo',

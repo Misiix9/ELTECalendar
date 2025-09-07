@@ -209,6 +209,14 @@ class Course {
     }
   }
 
+  /// Convenience getters for backward compatibility with existing UI code
+  String get name => courseName;
+  String get code => courseCode;
+  String get type => classType;
+  int get credits => weeklyHours; // Map weeklyHours to credits for compatibility
+  String? get description => notes; // Map notes to description
+  String? get semester => null; // Will be handled by semester management
+
   /// Get formatted instructor names
   String get formattedInstructors {
     if (instructors.isEmpty) return 'No instructor';
@@ -458,7 +466,14 @@ class ScheduleSlot {
 
   /// Get formatted time range
   String get timeRange {
-    return '${startTime.format(null)} - ${endTime.format(null)}';
+    return '${_formatTimeOfDay(startTime)} - ${_formatTimeOfDay(endTime)}';
+  }
+
+  /// Helper method to format TimeOfDay without BuildContext
+  String _formatTimeOfDay(TimeOfDay time) {
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 
   /// Duration of the slot in minutes

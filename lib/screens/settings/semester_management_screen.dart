@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import '../../services/semester_service.dart';
 import '../../services/calendar_service.dart';
 import '../../config/theme_config.dart';
-import '../../config/localization_config.dart';
+// import '../../config/localization_config.dart'; // TODO: Uncomment when using localization
 import '../../models/semester_model.dart';
 import '../../widgets/common_widgets/loading_overlay.dart';
 
@@ -32,7 +32,7 @@ class _SemesterManagementScreenState extends State<SemesterManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final localizations = AppLocalizations.of(context);
+    // final localizations = AppLocalizations.of(context); // TODO: Use for localization
 
     return Scaffold(
       backgroundColor: ThemeConfig.lightBackground,

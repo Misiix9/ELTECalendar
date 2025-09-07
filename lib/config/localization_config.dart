@@ -44,6 +44,7 @@ class AppLocalizations {
       'logout': 'Kijelentkezés',
       'emailVerification': 'E-mail megerősítés',
       'emailVerificationSent': 'Megerősítő e-mail elküldve',
+      'signOut': 'Kijelentkezés',
       
       // Calendar
       'calendar': 'Naptár',
@@ -126,6 +127,22 @@ class AppLocalizations {
       'minutesBefore': 'perccel előtte',
       'dailySummary': 'Napi összefoglaló',
       
+      // Theme and Settings
+      'themeSettings': 'Téma beállítások',
+      'academicSettings': 'Tanulmányi beállítások',
+      'manageSemesters': 'Félévek kezelése',
+      'manageSemestersDesc': 'Félévek hozzáadása, szerkesztése és rendezése',
+      'notificationSettings': 'Értesítés beállítások',
+      'notificationSettingsDesc': 'Értesítési beállítások kezelése',
+      'syncSettings': 'Szinkronizálás és adatok',
+      'syncSettingsDesc': 'Adatszinkronizálás és biztonsági másolat kezelése',
+      'account': 'Fiók',
+      
+      // Language names
+      'hungarian': 'Magyar',
+      'english': 'Angol',
+      'german': 'Német',
+      
       // Common
       'save': 'Mentés',
       'cancel': 'Mégse',
@@ -164,6 +181,7 @@ class AppLocalizations {
       'logout': 'Logout',
       'emailVerification': 'Email Verification',
       'emailVerificationSent': 'Verification email sent',
+      'signOut': 'Sign Out',
       
       // Calendar
       'calendar': 'Calendar',
@@ -241,6 +259,22 @@ class AppLocalizations {
       'exportCalendar': 'Export Calendar',
       'about': 'About',
       
+      // Theme and Settings
+      'themeSettings': 'Theme Settings',
+      'academicSettings': 'Academic Settings',
+      'manageSemesters': 'Manage Semesters',
+      'manageSemestersDesc': 'Add, edit, and organize your academic semesters',
+      'notificationSettings': 'Notification Settings',
+      'notificationSettingsDesc': 'Manage your notification preferences',
+      'syncSettings': 'Sync & Data',
+      'syncSettingsDesc': 'Manage data synchronization and backup',
+      'account': 'Account',
+      
+      // Language names
+      'hungarian': 'Hungarian',
+      'english': 'English',
+      'german': 'German',
+      
       // Notifications
       'classReminder': 'Class Reminder',
       'minutesBefore': 'minutes before',
@@ -284,6 +318,7 @@ class AppLocalizations {
       'logout': 'Abmelden',
       'emailVerification': 'E-Mail-Verifizierung',
       'emailVerificationSent': 'Bestätigungs-E-Mail gesendet',
+      'signOut': 'Abmelden',
       
       // Calendar
       'calendar': 'Kalender',
@@ -360,6 +395,22 @@ class AppLocalizations {
       'notifications': 'Benachrichtigungen',
       'exportCalendar': 'Kalender exportieren',
       'about': 'Über',
+      
+      // Theme and Settings
+      'themeSettings': 'Design-Einstellungen',
+      'academicSettings': 'Studieneinstellungen',
+      'manageSemesters': 'Semester verwalten',
+      'manageSemestersDesc': 'Hinzufügen, bearbeiten und organisieren Sie Ihre Studiensemester',
+      'notificationSettings': 'Benachrichtigungseinstellungen',
+      'notificationSettingsDesc': 'Verwalten Sie Ihre Benachrichtigungseinstellungen',
+      'syncSettings': 'Synchronisation & Daten',
+      'syncSettingsDesc': 'Datensynchronisation und Backup verwalten',
+      'account': 'Konto',
+      
+      // Language names
+      'hungarian': 'Ungarisch',
+      'english': 'Englisch',
+      'german': 'Deutsch',
       
       // Notifications
       'classReminder': 'Kurserinnerung',

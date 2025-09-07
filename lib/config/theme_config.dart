@@ -27,7 +27,12 @@ class ThemeConfig {
         onPrimary: lightBackground,
         onSecondary: darkTextElements,
         onSurface: darkTextElements,
-        error: Colors.red,
+        tertiary: goldAccent,
+        onTertiary: darkTextElements,
+        surfaceVariant: lightBackground,
+        onSurfaceVariant: darkTextElements,
+        outline: goldAccent,
+        error: Color(0xFFBA1A1A),
         onError: lightBackground,
       ),
       
@@ -49,17 +54,20 @@ class ThemeConfig {
         iconTheme: IconThemeData(
           color: lightBackground,
         ),
+        actionsIconTheme: IconThemeData(
+          color: lightBackground,
+        ),
       ),
       
       // Card theme for course cards and containers
-      cardTheme: CardTheme(
+      cardTheme: const CardThemeData(
         color: lightBackground,
         surfaceTintColor: Colors.transparent,
         elevation: 2,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.all(Radius.circular(12)),
         ),
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       ),
       
       // Button themes
@@ -215,9 +223,14 @@ class ThemeConfig {
         secondary: goldAccent,
         surface: darkTextElements,
         onPrimary: lightBackground,
-        onSecondary: darkTextElements,
+        onSecondary: lightBackground,
         onSurface: lightBackground,
-        error: Colors.redAccent,
+        tertiary: goldAccent,
+        onTertiary: lightBackground,
+        surfaceVariant: primaryDarkBlue,
+        onSurfaceVariant: lightBackground,
+        outline: goldAccent,
+        error: Color(0xFFFF5449),
         onError: darkTextElements,
       ),
       
@@ -242,14 +255,14 @@ class ThemeConfig {
       ),
       
       // Card theme for dark mode
-      cardTheme: CardTheme(
+      cardTheme: const CardThemeData(
         color: primaryDarkBlue,
         surfaceTintColor: Colors.transparent,
         elevation: 2,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.all(Radius.circular(12)),
         ),
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       ),
       
       // Button themes for dark mode

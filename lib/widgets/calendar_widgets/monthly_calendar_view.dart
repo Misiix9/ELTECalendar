@@ -74,10 +74,10 @@ class _MonthlyCalendarViewState extends State<MonthlyCalendarView> {
   Widget _buildCalendarWidget(BuildContext context, CalendarService calendarService, DateTime selectedDate) {
     return Container(
       decoration: BoxDecoration(
-        color: ThemeConfig.lightBackground,
+        color: Theme.of(context).colorScheme.surface,
         border: Border(
           bottom: BorderSide(
-            color: ThemeConfig.darkTextElements.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
           ),
         ),
       ),
@@ -234,20 +234,21 @@ class _MonthlyCalendarViewState extends State<MonthlyCalendarView> {
                       ),
                     );
                   },
-                )..add(
-                  if (courses.length > 3)
-                    Container(
-                      margin: const EdgeInsets.only(left: 2),
-                      child: Text(
-                        '+${courses.length - 3}',
-                        style: const TextStyle(
-                          fontSize: 8,
-                          fontWeight: FontWeight.bold,
-                          color: ThemeConfig.primaryDarkBlue,
+                )
+                  ..addAll([
+                    if (courses.length > 3)
+                      Container(
+                        margin: const EdgeInsets.only(left: 2),
+                        child: Text(
+                          '+${courses.length - 3}',
+                          style: const TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                            color: ThemeConfig.primaryDarkBlue,
+                          ),
                         ),
                       ),
-                    ),
-                ),
+                  ]),
               ),
             );
           },
@@ -304,10 +305,10 @@ class _MonthlyCalendarViewState extends State<MonthlyCalendarView> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: ThemeConfig.lightBackground,
+        color: Theme.of(context).colorScheme.surface,
         border: Border(
           top: BorderSide(
-            color: ThemeConfig.darkTextElements.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
           ),
         ),
       ),

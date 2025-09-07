@@ -7,9 +7,9 @@ import 'package:provider/provider.dart';
 import '../../config/theme_config.dart';
 import '../../config/localization_config.dart';
 import '../../models/course_model.dart';
-import '../../services/calendar_service.dart';
+import '../../models/course_type.dart';
+import '../../models/semester_model.dart';
 import '../../services/semester_service.dart';
-import '../../widgets/calendar_widgets/course_card_widget.dart';
 import 'course_edit_screen.dart';
 
 /// Detailed course information screen with comprehensive course data
@@ -26,6 +26,12 @@ class CourseDetailScreen extends StatefulWidget {
 }
 
 class _CourseDetailScreenState extends State<CourseDetailScreen> {
+  
+  /// Get CourseType from course's classType string
+  CourseType get _courseType {
+    return CourseType.fromString(widget.course.classType) ?? CourseType.lecture;
+  }
+
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
@@ -108,8 +114,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            widget.course.type.color,
-            widget.course.type.color.withOpacity(0.8),
+            _courseType.color,
+            _courseType.color.withOpacity(0.8),
           ],
         ),
       ),
@@ -124,7 +130,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               borderRadius: BorderRadius.circular(16),
             ),
             child: Text(
-              widget.course.type.displayName.toUpperCase(),
+              _courseType.displayName.toUpperCase(),
               style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
@@ -186,7 +192,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 child: _buildInfoCard(
                   icon: Icons.school,
                   label: 'Credits',
-                  value: widget.course.credits?.toString() ?? 'N/A',
+                  value: widget.course.credits.toString(),
                   color: ThemeConfig.primaryDarkBlue,
                 ),
               ),
@@ -453,7 +459,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: widget.course.type.color.withOpacity(0.1),
+                  color: _courseType.color.withOpacity(0.1),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(12),
                     topRight: Radius.circular(12),
@@ -464,7 +470,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: widget.course.type.color,
+                    color: _courseType.color,
                   ),
                 ),
               ),
@@ -515,7 +521,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             height: 40,
             margin: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              color: widget.course.type.color,
+              color: _courseType.color,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -635,7 +641,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 title: 'Sessions',
                 value: '$totalSessions',
                 subtitle: 'Weekly',
-                color: widget.course.type.color,
+                color: _courseType.color,
               ),
             ),
             const SizedBox(width: 16),

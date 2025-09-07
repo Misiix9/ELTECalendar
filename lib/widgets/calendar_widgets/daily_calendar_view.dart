@@ -12,10 +12,15 @@ import '../../models/course_model.dart';
 class DailyCalendarView extends StatelessWidget {
   const DailyCalendarView({super.key});
 
-  @override
+    @override
   Widget build(BuildContext context) {
     return Consumer<CalendarService>(
       builder: (context, calendarService, child) {
+        debugPrint('📅 DailyCalendarView: Building view, currentSemester: ${calendarService.currentSemester}');
+        debugPrint('📅 DailyCalendarView: Total courses loaded: ${calendarService.courses.length}');
+        debugPrint('📅 DailyCalendarView: IsLoading: ${calendarService.isLoading}');
+        debugPrint('📅 DailyCalendarView: ErrorMessage: ${calendarService.errorMessage}');
+        
         if (calendarService.isLoading) {
           return const Center(
             child: CircularProgressIndicator(
@@ -29,7 +34,10 @@ class DailyCalendarView extends StatelessWidget {
         }
 
         final selectedDate = calendarService.selectedDate;
+        debugPrint('📅 DailyCalendarView: Selected date: ${selectedDate.toIso8601String()}');
+        
         final scheduleSlots = calendarService.getScheduleSlotsForDate(selectedDate);
+        debugPrint('📅 DailyCalendarView: Schedule slots found: ${scheduleSlots.length}');
 
         if (scheduleSlots.isEmpty) {
           return _buildEmptyView(context, selectedDate);
@@ -63,10 +71,10 @@ class DailyCalendarView extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: ThemeConfig.lightBackground,
+        color: Theme.of(context).colorScheme.surface,
         border: Border(
           bottom: BorderSide(
-            color: ThemeConfig.darkTextElements.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
           ),
         ),
       ),
@@ -450,7 +458,7 @@ class CourseDetailsSheet extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: ThemeConfig.lightBackground,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(

@@ -254,6 +254,24 @@
       "languageVersion": "3.4"
     },
     {
+      "name": "firebase_analytics",
+      "rootUri": "file:///home/onxy/.pub-cache/hosted/pub.dev/firebase_analytics-12.0.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
+      "name": "firebase_analytics_platform_interface",
+      "rootUri": "file:///home/onxy/.pub-cache/hosted/pub.dev/firebase_analytics_platform_interface-5.0.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
+      "name": "firebase_analytics_web",
+      "rootUri": "file:///home/onxy/.pub-cache/hosted/pub.dev/firebase_analytics_web-0.6.0+1",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
       "name": "firebase_auth",
       "rootUri": "file:///home/onxy/.pub-cache/hosted/pub.dev/firebase_auth-6.0.2",
       "packageUri": "lib/",
@@ -288,6 +306,18 @@
       "rootUri": "file:///home/onxy/.pub-cache/hosted/pub.dev/firebase_core_web-3.1.0",
       "packageUri": "lib/",
       "languageVersion": "3.4"
+    },
+    {
+      "name": "firebase_crashlytics",
+      "rootUri": "file:///home/onxy/.pub-cache/hosted/pub.dev/firebase_crashlytics-5.0.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
+      "name": "firebase_crashlytics_platform_interface",
+      "rootUri": "file:///home/onxy/.pub-cache/hosted/pub.dev/firebase_crashlytics_platform_interface-3.8.12",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
     },
     {
       "name": "firebase_storage",

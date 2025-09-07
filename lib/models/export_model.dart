@@ -4,7 +4,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import 'course_model.dart';
 
 part 'export_model.g.dart';
 
@@ -301,6 +300,38 @@ extension CourseTypeExtension on CourseType {
     }
   }
   
+  /// Get icon for this course type
+  IconData get icon {
+    switch (this) {
+      case CourseType.lecture:
+        return Icons.school;
+      case CourseType.practice:
+        return Icons.assignment;
+      case CourseType.laboratory:
+        return Icons.science;
+      case CourseType.seminar:
+        return Icons.group;
+      case CourseType.consultation:
+        return Icons.question_answer;
+    }
+  }
+  
+  /// Get color for this course type
+  Color get color {
+    switch (this) {
+      case CourseType.lecture:
+        return const Color(0xFF03284F);
+      case CourseType.practice:
+        return const Color(0xFFC6A882);
+      case CourseType.laboratory:
+        return const Color(0xFF4A5C73);
+      case CourseType.seminar:
+        return const Color(0xFF8B5A3C);
+      case CourseType.consultation:
+        return const Color(0xFF5D4E75);
+    }
+  }
+  
   /// Match from string (Hungarian class type)
   static CourseType? fromString(String classType) {
     final type = classType.toLowerCase();
@@ -367,7 +398,7 @@ extension ExportLayoutTypeExtension on ExportLayoutType {
       case ExportLayoutType.weekly:
         return Icons.view_week;
       case ExportLayoutType.monthly:
-        return Icons.view_month;
+        return Icons.calendar_month;
       case ExportLayoutType.list:
         return Icons.view_list;
     }

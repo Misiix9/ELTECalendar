@@ -42,9 +42,6 @@ class _CalendarMainScreenState extends State<CalendarMainScreen> {
             icon: const Icon(Icons.upload_file),
             label: Text(localizations?.getString('importExcel') ?? 'Import Excel'),
           ),
-          
-          // Bottom navigation
-          bottomNavigationBar: _buildBottomNavigation(context, localizations),
         );
       },
     );
@@ -54,8 +51,7 @@ class _CalendarMainScreenState extends State<CalendarMainScreen> {
   AppBar _buildAppBar(BuildContext context, AppLocalizations? localizations, CalendarService calendarService) {
     return AppBar(
       title: Text(localizations?.calendar ?? 'Calendar'),
-      backgroundColor: ThemeConfig.lightBackground,
-      foregroundColor: ThemeConfig.primaryDarkBlue,
+      // Use theme colors instead of hardcoded ones
       elevation: 0,
       actions: [
         // Notification badge
@@ -121,7 +117,7 @@ class _CalendarMainScreenState extends State<CalendarMainScreen> {
               value: CalendarViewType.monthly,
               child: Row(
                 children: [
-                  const Icon(Icons.view_month, size: 18),
+                  const Icon(Icons.calendar_month, size: 18),
                   const SizedBox(width: 8),
                   const Text('Monthly View'),
                   if (calendarService.currentView == CalendarViewType.monthly)
@@ -235,44 +231,6 @@ class _CalendarMainScreenState extends State<CalendarMainScreen> {
   }
   
   /// Build bottom navigation
-  Widget _buildBottomNavigation(BuildContext context, AppLocalizations? localizations) {
-    return BottomNavigationBar(
-      type: BottomNavigationBarType.fixed,
-      currentIndex: 0,
-      selectedItemColor: ThemeConfig.primaryDarkBlue,
-      unselectedItemColor: ThemeConfig.darkTextElements.withOpacity(0.6),
-      items: [
-        BottomNavigationBarItem(
-          icon: const Icon(Icons.calendar_today),
-          label: localizations?.calendar ?? 'Calendar',
-        ),
-        BottomNavigationBarItem(
-          icon: const Icon(Icons.school),
-          label: localizations?.courses ?? 'Courses',
-        ),
-        BottomNavigationBarItem(
-          icon: const Icon(Icons.settings),
-          label: localizations?.settings ?? 'Settings',
-        ),
-      ],
-      onTap: (index) {
-        // Handle bottom navigation taps
-        switch (index) {
-          case 0:
-            // Already on calendar - do nothing
-            break;
-          case 1:
-            // Navigate to courses list
-            Navigator.of(context).pushNamed('/courses');
-            break;
-          case 2:
-            // Navigate to semester management (settings)
-            _navigateToSemesterManagement(context);
-            break;
-        }
-      },
-    );
-  }
   
   /// Get view icon for current view type
   IconData _getViewIcon(CalendarViewType viewType) {
@@ -282,7 +240,7 @@ class _CalendarMainScreenState extends State<CalendarMainScreen> {
       case CalendarViewType.weekly:
         return Icons.view_week;
       case CalendarViewType.monthly:
-        return Icons.view_month;
+        return Icons.calendar_month;
     }
   }
   
@@ -306,17 +264,39 @@ class _CalendarMainScreenState extends State<CalendarMainScreen> {
       ),
     );
 
-    // If import was successful, show a success message
+    // If import was successful, refresh courses and show success message
     if (result == true && mounted) {
+      debugPrint('🔄 Calendar: Import successful, refreshing data...');
+      
+      // Refresh courses in calendar service
+      final calendarService = Provider.of<CalendarService>(context, listen: false);
+      
+      // Also refresh semester service to update course counts
+      final semesterService = Provider.of<SemesterService>(context, listen: false);
+      semesterService.refreshSemesters();
+      
+      // Make sure calendar service uses the current semester
+      final currentSemesterId = semesterService.currentSemester?.id;
+      debugPrint('🔄 Calendar: Current semester ID: $currentSemesterId');
+      debugPrint('🔄 Calendar: Calendar service semester: ${calendarService.currentSemester}');
+      
+      if (currentSemesterId != null && currentSemesterId != calendarService.currentSemester) {
+        debugPrint('🔄 Calendar: Updating calendar service semester to $currentSemesterId');
+        await calendarService.setCurrentSemester(currentSemesterId);
+      }
+      
+      await calendarService.refreshCourses();
+      debugPrint('🔄 Calendar: Refresh completed');
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Courses imported successfully!'),
+          content: const Text('Courses imported successfully! Calendar updated.'),
           backgroundColor: Colors.green.shade600,
           action: SnackBarAction(
-            label: 'View',
+            label: 'View Today',
             textColor: Colors.white,
             onPressed: () {
-              // TODO: Scroll to today or refresh calendar view
+              calendarService.goToToday();
             },
           ),
         ),

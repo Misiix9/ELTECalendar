@@ -72,7 +72,7 @@ class StudentUser {
       displayName: displayName,
       emailVerified: emailVerified,
       createdAt: DateTime.now(),
-      currentSemester: currentSemester ?? _calculateCurrentSemester(),
+      currentSemester: currentSemester ?? calculateCurrentSemester(),
       profileImageUrl: profileImageUrl,
       preferences: preferences ?? _defaultPreferences(),
     );
@@ -88,7 +88,7 @@ class StudentUser {
       displayName: data['displayName'] ?? '',
       emailVerified: data['emailVerified'] ?? false,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      currentSemester: data['currentSemester'] ?? _calculateCurrentSemester(),
+      currentSemester: data['currentSemester'] ?? calculateCurrentSemester(),
       lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate(),
       profileImageUrl: data['profileImageUrl'],
       preferences: Map<String, dynamic>.from(data['preferences'] ?? {}),
@@ -171,7 +171,7 @@ class StudentUser {
   }
 
   /// Calculate current semester based on date
-  static String _calculateCurrentSemester() {
+  static String calculateCurrentSemester() {
     final now = DateTime.now();
     final year = now.year;
     final month = now.month;

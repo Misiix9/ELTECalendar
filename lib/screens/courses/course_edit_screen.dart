@@ -7,8 +7,8 @@ import 'package:provider/provider.dart';
 import '../../config/theme_config.dart';
 import '../../config/localization_config.dart';
 import '../../models/course_model.dart';
+import '../../models/course_type.dart';
 import '../../services/calendar_service.dart';
-import '../../services/semester_service.dart';
 
 /// Course creation and editing screen with comprehensive form
 class CourseEditScreen extends StatefulWidget {
@@ -70,9 +70,10 @@ class _CourseEditScreenState extends State<CourseEditScreen> {
       final course = widget.course!;
       _nameController.text = course.name;
       _codeController.text = course.code;
-      _creditsController.text = course.credits?.toString() ?? '';
+      _creditsController.text = course.credits.toString();
       _descriptionController.text = course.description ?? '';
-      _selectedType = course.type;
+      // Convert string type to CourseType enum
+      _selectedType = CourseType.fromString(course.type) ?? CourseType.lecture;
       _instructors = List.from(course.instructors);
       _scheduleSlots = List.from(course.scheduleSlots);
     }
@@ -681,6 +682,8 @@ class _CourseEditScreenState extends State<CourseEditScreen> {
       context: context,
       builder: (context) => ScheduleSlotDialog(
         existingSlot: existingSlot,
+        courseId: widget.course?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        courseType: _selectedType,
         onSave: (slot) {
           setState(() {
             if (index != null) {
@@ -731,21 +734,22 @@ class _CourseEditScreenState extends State<CourseEditScreen> {
     });
 
     try {
-      // Create course object
+      // Create course object - use the proper constructor parameters
       final course = Course(
         id: widget.course?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
-        name: _nameController.text.trim(),
-        code: _codeController.text.trim(),
-        type: _selectedType,
+        courseCode: _codeController.text.trim(),
+        courseName: _nameController.text.trim(),
+        classCode: _codeController.text.trim(), // Using same as courseCode for now
+        classType: _selectedType.hungarianName,
+        weeklyHours: _creditsController.text.trim().isNotEmpty 
+          ? int.parse(_creditsController.text.trim()) 
+          : 0,
+        rawScheduleInfo: '', // TODO: Generate from schedule slots
         instructors: _instructors,
         scheduleSlots: _scheduleSlots,
-        credits: _creditsController.text.trim().isNotEmpty 
-          ? int.parse(_creditsController.text.trim()) 
-          : null,
-        description: _descriptionController.text.trim().isNotEmpty 
+        notes: _descriptionController.text.trim().isNotEmpty 
           ? _descriptionController.text.trim() 
           : null,
-        semester: context.read<SemesterService>().currentSemester?.id,
       );
 
       // Save using calendar service
@@ -790,11 +794,15 @@ class _CourseEditScreenState extends State<CourseEditScreen> {
 class ScheduleSlotDialog extends StatefulWidget {
   final ScheduleSlot? existingSlot;
   final Function(ScheduleSlot) onSave;
+  final String courseId;
+  final CourseType courseType;
 
   const ScheduleSlotDialog({
     super.key,
     this.existingSlot,
     required this.onSave,
+    required this.courseId,
+    required this.courseType,
   });
 
   @override
@@ -818,7 +826,7 @@ class _ScheduleSlotDialogState extends State<ScheduleSlotDialog> {
       _selectedDay = widget.existingSlot!.dayOfWeek;
       _startTime = widget.existingSlot!.startTime;
       _endTime = widget.existingSlot!.endTime;
-      _locationController.text = widget.existingSlot!.location ?? '';
+      _locationController.text = widget.existingSlot!.location;
     }
   }
 
@@ -839,7 +847,7 @@ class _ScheduleSlotDialogState extends State<ScheduleSlotDialog> {
           children: [
             // Day selection
             DropdownButtonFormField<int>(
-              value: _selectedDay,
+              initialValue: _selectedDay,
               decoration: const InputDecoration(
                 labelText: 'Day of Week',
                 border: OutlineInputBorder(),
@@ -973,7 +981,9 @@ class _ScheduleSlotDialogState extends State<ScheduleSlotDialog> {
       endTime: _endTime,
       location: _locationController.text.trim().isNotEmpty 
         ? _locationController.text.trim() 
-        : null,
+        : 'TBA', // Provide a default value instead of null
+      courseId: widget.courseId,
+      displayColor: widget.courseType.color,
     );
 
     widget.onSave(slot);

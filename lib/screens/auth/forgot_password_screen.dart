@@ -107,7 +107,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         
         // Title
         Text(
-          localizations?.resetPassword ?? 'Reset Password',
+          'Reset Password',
           style: Theme.of(context).textTheme.displaySmall?.copyWith(
             color: ThemeConfig.primaryDarkBlue,
             fontWeight: FontWeight.bold,

@@ -19,15 +19,15 @@ class FirebaseService {
   /// Initialize Firebase service with offline persistence
   Future<void> initialize() async {
     try {
-      // Enable offline persistence for better UX
-      await _firestore.enablePersistence();
+      // For mobile platforms, offline persistence is enabled by default
+      // For web, we'll skip persistence setup due to API differences
       
       if (kDebugMode) {
-        print('Firebase service initialized with offline persistence');
+        print('Firebase service initialized');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Failed to enable offline persistence: $e');
+        print('Failed to initialize Firebase service: $e');
       }
       // Non-critical error, continue without persistence
     }
@@ -93,6 +93,8 @@ class FirebaseService {
   /// users/{userId}/semesters/{semesterId}/courses/{courseId}
   Future<void> saveCourses(String userId, String semesterId, List<Course> courses) async {
     try {
+      debugPrint('🔥 FirebaseService: Starting to save ${courses.length} courses for user $userId, semester $semesterId');
+      
       final batch = _firestore.batch();
       final semesterRef = _firestore
           .collection(AppConstants.usersCollection)
@@ -105,6 +107,7 @@ class FirebaseService {
           .collection(AppConstants.coursesSubcollection)
           .get();
 
+      debugPrint('🔥 FirebaseService: Deleting ${existingCourses.docs.length} existing courses');
       for (final doc in existingCourses.docs) {
         batch.delete(doc.reference);
       }
@@ -114,7 +117,10 @@ class FirebaseService {
         final courseRef = semesterRef
             .collection(AppConstants.coursesSubcollection)
             .doc(course.id);
-        batch.set(courseRef, course.toFirestore());
+        final courseData = course.toFirestore();
+        debugPrint('🔥 FirebaseService: Adding course ${course.courseCode} - ${course.courseName}');
+        debugPrint('🔥 FirebaseService: Course data keys: ${courseData.keys.toList()}');
+        batch.set(courseRef, courseData);
       }
 
       // Update semester metadata
@@ -124,11 +130,13 @@ class FirebaseService {
       }, SetOptions(merge: true));
 
       await batch.commit();
+      debugPrint('🔥 FirebaseService: Successfully saved ${courses.length} courses for semester $semesterId');
 
       if (kDebugMode) {
         print('Saved ${courses.length} courses for semester $semesterId');
       }
     } catch (e) {
+      debugPrint('❌ FirebaseService: Failed to save courses: $e');
       if (kDebugMode) {
         print('Failed to save courses: $e');
       }
@@ -148,16 +156,36 @@ class FirebaseService {
         print('Starting course import: ${courses.length} courses to semester $semesterId');
       }
 
+      debugPrint('🚀 ImportCoursesToSemester: Starting import');
+      debugPrint('🚀 ImportCoursesToSemester: User ID: $userId');
+      debugPrint('🚀 ImportCoursesToSemester: Semester ID: $semesterId');
+      debugPrint('🚀 ImportCoursesToSemester: Course count: ${courses.length}');
+
       // Use existing saveCourses method (which handles overwrite)
       await saveCourses(userId, semesterId, courses);
 
       // Log import success
       await _logImportActivity(userId, semesterId, courses.length);
 
+      // Verify courses were saved by immediately reading them back
+      debugPrint('🚀 ImportCoursesToSemester: Verifying import by reading back courses...');
+      try {
+        final savedCourses = await getCourses(userId, semesterId);
+        debugPrint('🚀 ImportCoursesToSemester: Verification complete - found ${savedCourses.length} courses');
+        for (final course in savedCourses) {
+          debugPrint('🚀 ImportCoursesToSemester: Verified course: ${course.courseCode} - ${course.courseName}');
+        }
+      } catch (e) {
+        debugPrint('❌ ImportCoursesToSemester: Verification failed: $e');
+      }
+
+      debugPrint('🚀 ImportCoursesToSemester: Import completed successfully');
+
       if (kDebugMode) {
         print('Successfully imported ${courses.length} courses to semester $semesterId');
       }
     } catch (e) {
+      debugPrint('❌ ImportCoursesToSemester: Import failed: $e');
       if (kDebugMode) {
         print('Failed to import courses to semester: $e');
       }
@@ -168,6 +196,8 @@ class FirebaseService {
   /// Get courses for a specific semester
   Future<List<Course>> getCourses(String userId, String semesterId) async {
     try {
+      debugPrint('🔍 FirebaseService: Loading courses for user $userId, semester $semesterId');
+      
       final snapshot = await _firestore
           .collection(AppConstants.usersCollection)
           .doc(userId)
@@ -177,10 +207,21 @@ class FirebaseService {
           .orderBy('courseCode')
           .get();
 
-      return snapshot.docs
-          .map((doc) => Course.fromFirestore(doc))
+      debugPrint('🔍 FirebaseService: Found ${snapshot.docs.length} course documents');
+      
+      final courses = snapshot.docs
+          .map((doc) {
+            debugPrint('🔍 FirebaseService: Processing course doc ${doc.id}');
+            final course = Course.fromFirestore(doc);
+            debugPrint('🔍 FirebaseService: Loaded course: ${course.courseCode} - ${course.courseName}');
+            return course;
+          })
           .toList();
+
+      debugPrint('🔍 FirebaseService: Successfully loaded ${courses.length} courses');
+      return courses;
     } catch (e) {
+      debugPrint('❌ FirebaseService: Failed to get courses: $e');
       if (kDebugMode) {
         print('Failed to get courses: $e');
       }

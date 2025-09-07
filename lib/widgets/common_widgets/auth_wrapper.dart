@@ -8,7 +8,6 @@ import '../../services/auth_service.dart';
 import '../../models/user_model.dart';
 import '../../config/theme_config.dart';
 import '../../screens/auth/login_screen.dart';
-import '../../screens/calendar/calendar_main_screen.dart';
 import '../../screens/auth/email_verification_screen.dart';
 
 /// Authentication wrapper that routes users based on authentication state
@@ -27,7 +26,7 @@ class AuthWrapper extends StatelessWidget {
         // Route based on authentication state
         switch (authService.authState) {
           case UserAuthState.authenticated:
-            return const CalendarMainScreen();
+            return const _AuthenticatedRedirect();
           
           case UserAuthState.emailNotVerified:
             return const EmailVerificationScreen();
@@ -364,5 +363,38 @@ class LogoutButton extends StatelessWidget {
     }
 
     await authService.signOut();
+  }
+}
+
+/// Redirect widget for authenticated users
+class _AuthenticatedRedirect extends StatefulWidget {
+  const _AuthenticatedRedirect();
+
+  @override
+  State<_AuthenticatedRedirect> createState() => _AuthenticatedRedirectState();
+}
+
+class _AuthenticatedRedirectState extends State<_AuthenticatedRedirect> {
+  @override
+  void initState() {
+    super.initState();
+    // Redirect to calendar on next frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        Navigator.of(context).pushReplacementNamed('/calendar');
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      backgroundColor: ThemeConfig.lightBackground,
+      body: Center(
+        child: CircularProgressIndicator(
+          color: ThemeConfig.primaryDarkBlue,
+        ),
+      ),
+    );
   }
 }

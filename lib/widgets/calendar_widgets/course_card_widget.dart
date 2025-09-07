@@ -345,10 +345,10 @@ class CourseSummaryCard extends StatelessWidget {
                     return Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: ThemeConfig.lightBackground,
+                        color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: ThemeConfig.darkTextElements.withOpacity(0.2),
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
                         ),
                       ),
                       child: Text(

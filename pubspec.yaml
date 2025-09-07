@@ -19,6 +19,8 @@ dependencies:
   firebase_auth: ^6.0.2
   cloud_firestore: ^6.0.1
   firebase_storage: ^13.0.1
+  firebase_analytics: ^12.0.1
+  firebase_crashlytics: ^5.0.1
   
   # Authentication
   google_sign_in: ^7.1.1
@@ -62,6 +64,8 @@ dependencies:
   # Additional utilities
   path_provider: ^2.1.1
   uuid: ^4.2.1
+  http: ^1.1.0
+  crypto: ^3.0.3
 
 dev_dependencies:
   flutter_test:
@@ -80,9 +84,10 @@ flutter:
     - assets/icons/
     
   # Fonts (using default Material Design fonts for now)
-  fonts:
-    - family: Roboto
-      fonts:
-        - asset: fonts/Roboto-Regular.ttf
-        - asset: fonts/Roboto-Bold.ttf
-          weight: 700
+  # TODO: Add custom fonts when available
+  # fonts:
+  #   - family: Roboto
+  #     fonts:
+  #       - asset: fonts/Roboto-Regular.ttf
+  #       - asset: fonts/Roboto-Bold.ttf
+  #         weight: 700

@@ -4,7 +4,7 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+// import 'package:google_sign_in/google_sign_in.dart'; // TODO: Re-enable when fixing dependency issues
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:io' show Platform;
@@ -16,7 +16,10 @@ import 'firebase_service.dart';
 /// Comprehensive authentication service implementing all specified requirements
 class AuthService extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  // TODO: Fix GoogleSignIn constructor - temporarily disabled
+  // final GoogleSignIn _googleSignIn = GoogleSignIn(
+  //   scopes: ['email', 'profile'],
+  // );
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseService _firebaseService = FirebaseService();
 
@@ -109,37 +112,63 @@ class AuthService extends ChangeNotifier {
   /// Load user profile from Firestore or create new one
   Future<void> _loadUserProfile(User firebaseUser) async {
     try {
-      final userDoc = await _firestore
-          .collection(AppConstants.usersCollection)
-          .doc(firebaseUser.uid)
-          .collection(AppConstants.profileSubcollection)
-          .doc('profile')
-          .get();
+      try {
+        final userDoc = await _firestore
+            .collection(AppConstants.usersCollection)
+            .doc(firebaseUser.uid)
+            .collection(AppConstants.profileSubcollection)
+            .doc('profile')
+            .get()
+            .timeout(const Duration(seconds: 10));
 
-      if (userDoc.exists) {
-        // Load existing user profile
-        final userData = userDoc.data()!;
-        _currentUser = StudentUser(
+        if (userDoc.exists) {
+          // Load existing user profile
+          final userData = userDoc.data()!;
+          _currentUser = StudentUser(
+            uid: firebaseUser.uid,
+            email: userData['email'] ?? firebaseUser.email ?? '',
+            displayName: userData['displayName'] ?? firebaseUser.displayName ?? '',
+            emailVerified: firebaseUser.emailVerified,
+            createdAt: (userData['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+            currentSemester: userData['currentSemester'] ?? StudentUser.calculateCurrentSemester(),
+            lastLoginAt: DateTime.now(),
+            profileImageUrl: userData['profileImageUrl'] ?? firebaseUser.photoURL,
+            preferences: Map<String, dynamic>.from(userData['preferences'] ?? {}),
+          );
+          
+          // Update last login time (non-blocking)
+          _updateLastLoginTime().catchError((e) {
+            if (kDebugMode) print('Warning: Could not update last login time: $e');
+          });
+        } else {
+          // Create new user profile
+          await _createUserProfile(firebaseUser);
+        }
+      } catch (firestoreError) {
+        if (kDebugMode) {
+          print('Warning: Firestore not available, creating basic user profile: $firestoreError');
+        }
+        // Create basic user profile without Firestore
+        _currentUser = StudentUser.fromAuth(
           uid: firebaseUser.uid,
-          email: userData['email'] ?? firebaseUser.email ?? '',
-          displayName: userData['displayName'] ?? firebaseUser.displayName ?? '',
+          email: firebaseUser.email ?? '',
+          displayName: firebaseUser.displayName ?? firebaseUser.email?.split('@').first ?? '',
           emailVerified: firebaseUser.emailVerified,
-          createdAt: (userData['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-          currentSemester: userData['currentSemester'] ?? StudentUser._calculateCurrentSemester(),
-          lastLoginAt: DateTime.now(),
-          profileImageUrl: userData['profileImageUrl'] ?? firebaseUser.photoURL,
-          preferences: Map<String, dynamic>.from(userData['preferences'] ?? {}),
+          profileImageUrl: firebaseUser.photoURL,
         );
-        
-        // Update last login time
-        await _updateLastLoginTime();
-      } else {
-        // Create new user profile
-        await _createUserProfile(firebaseUser);
       }
+      
     } catch (e) {
       _lastError = 'Failed to load user profile: $e';
-      throw Exception(_lastError);
+      if (kDebugMode) print(_lastError);
+      // Create minimal user profile so app doesn't fail
+      _currentUser = StudentUser.fromAuth(
+        uid: firebaseUser.uid,
+        email: firebaseUser.email ?? '',
+        displayName: firebaseUser.displayName ?? firebaseUser.email?.split('@').first ?? '',
+        emailVerified: firebaseUser.emailVerified,
+        profileImageUrl: firebaseUser.photoURL,
+      );
     }
   }
 
@@ -154,16 +183,24 @@ class AuthService extends ChangeNotifier {
         profileImageUrl: firebaseUser.photoURL,
       );
 
-      // Save profile to Firestore
-      await _firestore
-          .collection(AppConstants.usersCollection)
-          .doc(firebaseUser.uid)
-          .collection(AppConstants.profileSubcollection)
-          .doc('profile')
-          .set(_currentUser!.toFirestore());
+      // Try to save profile to Firestore with timeout
+      try {
+        await _firestore
+            .collection(AppConstants.usersCollection)
+            .doc(firebaseUser.uid)
+            .collection(AppConstants.profileSubcollection)
+            .doc('profile')
+            .set(_currentUser!.toFirestore())
+            .timeout(const Duration(seconds: 10));
 
-      if (kDebugMode) {
-        print('New user profile created for ${firebaseUser.email}');
+        if (kDebugMode) {
+          print('New user profile created for ${firebaseUser.email}');
+        }
+      } catch (firestoreError) {
+        if (kDebugMode) {
+          print('Warning: Could not save profile to Firestore: $firestoreError');
+        }
+        // Continue without Firestore - user can still use the app
       }
     } catch (e) {
       _lastError = 'Failed to create user profile: $e';
@@ -287,31 +324,34 @@ class AuthService extends ChangeNotifier {
     try {
       _lastError = null;
 
+      // TODO: Fix Google Sign-In dependency issues
+      return AuthResult.failure('Google sign-in temporarily disabled - dependency issues');
+
       // Trigger Google Sign In
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      // final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       
-      if (googleUser == null) {
-        // User cancelled the sign-in
-        return AuthResult.failure('Google sign-in cancelled');
-      }
+      // if (googleUser == null) {
+      //   // User cancelled the sign-in
+      //   return AuthResult.failure('Google sign-in cancelled');
+      // }
 
       // Get authentication details
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      // final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
 
       // Create Firebase credential
-      final OAuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
+      // final OAuthCredential credential = GoogleAuthProvider.credential(
+      //   accessToken: googleAuth.accessToken,
+      //   idToken: googleAuth.idToken,
+      // );
 
       // Sign in with credential
-      final UserCredential userCredential = await _auth.signInWithCredential(credential);
+      // final UserCredential userCredential = await _auth.signInWithCredential(credential);
 
-      if (userCredential.user != null) {
-        return AuthResult.success('Google sign-in successful');
-      } else {
-        return AuthResult.failure('Google sign-in failed');
-      }
+      // if (userCredential.user != null) {
+      //   return AuthResult.success('Google sign-in successful');
+      // } else {
+      //   return AuthResult.failure('Google sign-in failed');
+      // }
     } on FirebaseAuthException catch (e) {
       _lastError = _getFirebaseAuthErrorMessage(e);
       return AuthResult.failure(_lastError!);
@@ -422,11 +462,11 @@ class AuthService extends ChangeNotifier {
     try {
       _lastError = null;
 
-      // Sign out from all providers
-      await Future.wait([
-        _auth.signOut(),
-        _googleSignIn.signOut(),
-      ]);
+      // Sign out from Firebase Auth
+      await _auth.signOut();
+      
+      // TODO: Add Google Sign-In signout when GoogleSignIn is properly configured
+      // await _googleSignIn.signOut();
 
       // Clear local user data
       _currentUser = null;

@@ -4,15 +4,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../config/theme_config.dart';
-import '../../config/localization_config.dart';
+import '../../models/course_model.dart';
+import '../../models/export_model.dart';
 import '../../services/export_service.dart';
 import '../../services/calendar_service.dart';
 import '../../services/semester_service.dart';
-import '../../models/export_model.dart';
-import '../../models/course_model.dart';
-import '../../widgets/common_widgets/loading_indicator.dart';
 import '../../widgets/common_widgets/loading_overlay.dart';
+import '../../config/theme_config.dart';
+import '../../config/localization_config.dart';
 
 /// Export configuration and management screen
 class ExportScreen extends StatefulWidget {
@@ -55,11 +54,11 @@ class _ExportScreenState extends State<ExportScreen> {
               ),
               
               // Loading overlay during export
-              if (exportService.isExporting)
-                LoadingOverlay(
-                  message: exportService.currentProgress?.message ?? 'Exporting...',
-                  progress: exportService.currentProgress?.progress,
-                ),
+              LoadingOverlay(
+                isLoading: exportService.isExporting,
+                loadingText: exportService.currentProgress?.message ?? 'Exporting...',
+                child: Container(), // Empty container since we're in a Stack
+              ),
             ],
           );
         },

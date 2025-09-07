@@ -69,10 +69,10 @@ class WeeklyCalendarView extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: ThemeConfig.lightBackground,
+        color: Theme.of(context).colorScheme.surface,
         border: Border(
           bottom: BorderSide(
-            color: ThemeConfig.darkTextElements.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
           ),
         ),
       ),
@@ -130,10 +130,10 @@ class WeeklyCalendarView extends StatelessWidget {
     return Container(
       height: 60,
       decoration: BoxDecoration(
-        color: ThemeConfig.lightBackground,
+        color: Theme.of(context).colorScheme.surface,
         border: Border(
           bottom: BorderSide(
-            color: ThemeConfig.darkTextElements.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
           ),
         ),
       ),

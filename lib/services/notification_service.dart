@@ -219,13 +219,13 @@ class NotificationService extends ChangeNotifier {
       id: notificationId,
       type: courseReminderType,
       title: 'Course Reminder',
-      message: '${course.name} starts in 15 minutes${slot.location != null ? ' at ${slot.location}' : ''}',
+      message: '${course.name} starts in 15 minutes${' at ${slot.location}'}',
       timestamp: DateTime.now(),
       isRead: false,
       data: {
         'courseId': course.id,
         'courseName': course.name,
-        'startTime': slot.startTime.format(null as BuildContext),
+        'startTime': '${slot.startTime.hour.toString().padLeft(2, '0')}:${slot.startTime.minute.toString().padLeft(2, '0')}',
         'location': slot.location,
       },
     );

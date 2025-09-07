@@ -5,7 +5,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../models/course_model.dart';
-import '../models/user_model.dart';
+import '../models/course_type.dart';
 import '../services/firebase_service.dart';
 import '../services/auth_service.dart';
 import '../services/semester_service.dart';
@@ -32,6 +32,8 @@ class CalendarService extends ChangeNotifier {
 
   CalendarService(this._firebaseService, this._authService, this._semesterService) {
     _currentSemester = _semesterService.currentSemester?.id;
+    debugPrint('🏗️ CalendarService: Initialized with current semester: $_currentSemester');
+    debugPrint('🏗️ CalendarService: Available semesters: ${_semesterService.availableSemesters.map((s) => s.id).toList()}');
     _loadCoursesForCurrentSemester();
   }
 
@@ -106,9 +108,24 @@ class CalendarService extends ChangeNotifier {
   /// Get courses for a specific date
   List<Course> getCoursesForDate(DateTime date) {
     final weekday = date.weekday;
-    return _courses.where((course) {
-      return course.scheduleSlots.any((slot) => slot.dayOfWeek == weekday);
+    debugPrint('📅 CalendarService: Getting courses for date ${date.toIso8601String()} (weekday: $weekday)');
+    debugPrint('📅 CalendarService: Total courses available: ${_courses.length}');
+    
+    final coursesForDate = _courses.where((course) {
+      final hasSlotForDay = course.scheduleSlots.any((slot) => slot.dayOfWeek == weekday);
+      if (hasSlotForDay) {
+        debugPrint('📅 CalendarService: Course ${course.courseName} has slot for weekday $weekday');
+        for (final slot in course.scheduleSlots) {
+          if (slot.dayOfWeek == weekday) {
+            debugPrint('📅 CalendarService: - Slot: ${slot.startTime} - ${slot.endTime}');
+          }
+        }
+      }
+      return hasSlotForDay;
     }).toList();
+    
+    debugPrint('📅 CalendarService: Found ${coursesForDate.length} courses for date');
+    return coursesForDate;
   }
 
   /// Get courses for a specific week
@@ -146,6 +163,8 @@ class CalendarService extends ChangeNotifier {
     final weekday = date.weekday;
     final List<ScheduleSlot> slots = [];
     
+    debugPrint('📅 CalendarService: Getting schedule slots for date ${date.toIso8601String()} (weekday: $weekday)');
+    
     for (final course in _courses) {
       final courseSlots = course.scheduleSlots
           .where((slot) => slot.dayOfWeek == weekday)
@@ -153,12 +172,18 @@ class CalendarService extends ChangeNotifier {
             courseId: course.id,
             displayColor: course.displayColor,
           ));
+      
+      if (courseSlots.isNotEmpty) {
+        debugPrint('📅 CalendarService: Adding ${courseSlots.length} slots for course ${course.courseName}');
+      }
+      
       slots.addAll(courseSlots);
     }
     
     // Sort by start time
     slots.sort((a, b) => a.startTime.compareTo(b.startTime));
     
+    debugPrint('📅 CalendarService: Total slots for date: ${slots.length}');
     return slots;
   }
 
@@ -226,6 +251,7 @@ class CalendarService extends ChangeNotifier {
   /// Load courses for current semester
   Future<void> _loadCoursesForCurrentSemester() async {
     if (_currentSemester == null) {
+      debugPrint('📅 CalendarService: No current semester set, clearing courses');
       _courses = [];
       _errorMessage = null;
       return;
@@ -237,13 +263,17 @@ class CalendarService extends ChangeNotifier {
     try {
       final user = _authService.currentUser;
       if (user == null) {
+        debugPrint('❌ CalendarService: User not authenticated');
         throw Exception('User not authenticated');
       }
+
+      debugPrint('📅 CalendarService: Loading courses for user ${user.uid}, semester $_currentSemester');
 
       // Check cache first
       final cacheKey = '${user.uid}_$_currentSemester';
       if (_courseCache.containsKey(cacheKey)) {
         _courses = _courseCache[cacheKey]!;
+        debugPrint('📅 CalendarService: Loaded ${_courses.length} courses from cache');
         _setLoading(false);
         return;
       }
@@ -255,29 +285,37 @@ class CalendarService extends ChangeNotifier {
       _courseCache[cacheKey] = courses;
       _courses = courses;
       
-      debugPrint('Loaded ${courses.length} courses for semester $_currentSemester');
+      debugPrint('📅 CalendarService: Loaded ${courses.length} courses from Firebase for semester $_currentSemester');
 
     } catch (e) {
-      debugPrint('Error loading courses: $e');
+      debugPrint('❌ CalendarService: Error loading courses: $e');
       _errorMessage = e.toString();
       _courses = [];
     } finally {
       _setLoading(false);
+      // Ensure listeners are notified even if there was an error
+      notifyListeners();
     }
   }
 
   /// Refresh courses from Firebase
   Future<void> refreshCourses() async {
+    debugPrint('🔄 CalendarService: Starting course refresh');
+    debugPrint('🔄 CalendarService: Current semester: $_currentSemester');
+    
     // Clear cache
     if (_currentSemester != null) {
       final user = _authService.currentUser;
       if (user != null) {
         final cacheKey = '${user.uid}_$_currentSemester';
         _courseCache.remove(cacheKey);
+        debugPrint('🔄 CalendarService: Cleared cache for key: $cacheKey');
       }
     }
     
     await _loadCoursesForCurrentSemester();
+    debugPrint('🔄 CalendarService: Course refresh completed. Current course count: ${_courses.length}');
+    notifyListeners();
   }
 
   /// Add or update a course
@@ -349,9 +387,14 @@ class CalendarService extends ChangeNotifier {
 
   /// Get course by ID
   Course? getCourseById(String courseId) {
+    debugPrint('📅 CalendarService: Looking for course with ID: $courseId');
     try {
-      return _courses.firstWhere((course) => course.id == courseId);
+      final course = _courses.firstWhere((course) => course.id == courseId);
+      debugPrint('📅 CalendarService: Found course: ${course.courseName}');
+      return course;
     } catch (e) {
+      debugPrint('❌ CalendarService: Course with ID $courseId not found');
+      debugPrint('📅 CalendarService: Available course IDs: ${_courses.map((c) => c.id).toList()}');
       return null;
     }
   }
@@ -362,8 +405,8 @@ class CalendarService extends ChangeNotifier {
     
     final lowercaseQuery = query.toLowerCase();
     return _courses.where((course) {
-      return course.name.toLowerCase().contains(lowercaseQuery) ||
-             course.code.toLowerCase().contains(lowercaseQuery) ||
+      return course.courseName.toLowerCase().contains(lowercaseQuery) ||
+             course.courseCode.toLowerCase().contains(lowercaseQuery) ||
              course.instructors.any((instructor) => 
                instructor.toLowerCase().contains(lowercaseQuery));
     }).toList();
@@ -373,15 +416,6 @@ class CalendarService extends ChangeNotifier {
   List<Course> filterCoursesByType(CourseType? type) {
     if (type == null) return _courses;
     return _courses.where((course) => course.type == type).toList();
-  }
-
-  /// Get courses for a specific date
-  List<Course> getCoursesForDate(DateTime date) {
-    final dayOfWeek = date.weekday;
-    
-    return _courses.where((course) {
-      return course.scheduleSlots.any((slot) => slot.dayOfWeek == dayOfWeek);
-    }).toList();
   }
 
   /// Get course statistics
@@ -397,7 +431,7 @@ class CalendarService extends ChangeNotifier {
 
     final totalCredits = _courses.fold<int>(
       0, 
-      (sum, course) => sum + (course.credits ?? 0),
+      (sum, course) => sum + course.credits,
     );
 
     double totalWeeklyMinutes = 0;
@@ -412,7 +446,7 @@ class CalendarService extends ChangeNotifier {
 
     final coursesByType = <String, int>{};
     for (final course in _courses) {
-      final typeName = course.type.displayName;
+      final typeName = CourseType.fromString(course.type)?.displayName ?? course.type;
       coursesByType[typeName] = (coursesByType[typeName] ?? 0) + 1;
     }
 

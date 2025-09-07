@@ -112,7 +112,7 @@ class FirebaseConfig {
     return {
       'projectId': options.projectId,
       'appId': options.appId,
-      'storageBucket': options.storageBucket,
+      'storageBucket': options.storageBucket ?? '',
     };
   }
 }

@@ -3,15 +3,18 @@
 // Step: 3.2 - Excel Import Screen Implementation
 
 import 'dart:typed_data';
+import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:excel/excel.dart' as ExcelLib;
 import '../../services/excel_parser_service.dart';
+import '../../services/excel_template_service.dart';
 import '../../services/firebase_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/semester_service.dart';
 import '../../config/theme_config.dart';
-import '../../config/localization_config.dart';
+// import '../../config/localization_config.dart'; // TODO: Uncomment when using localization
 import '../../models/course_model.dart';
 import '../../widgets/common_widgets/loading_overlay.dart';
 import '../../widgets/common_widgets/auth_button.dart';
@@ -35,7 +38,7 @@ class _ExcelImportScreenState extends State<ExcelImportScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final localizations = AppLocalizations.of(context);
+    // final localizations = AppLocalizations.of(context); // TODO: Use for localization
     
     return Scaffold(
       backgroundColor: ThemeConfig.lightBackground,
@@ -67,6 +70,11 @@ class _ExcelImportScreenState extends State<ExcelImportScreen> {
               children: [
                 // Header section
                 _buildHeader(),
+                
+                const SizedBox(height: 24),
+                
+                // Template download section
+                _buildTemplateSection(),
                 
                 const SizedBox(height: 32),
                 
@@ -103,6 +111,59 @@ class _ExcelImportScreenState extends State<ExcelImportScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  /// Build template download section
+  Widget _buildTemplateSection() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: ThemeConfig.primaryDarkBlue.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: ThemeConfig.primaryDarkBlue.withOpacity(0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.download,
+                color: ThemeConfig.primaryDarkBlue,
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Need a template?',
+                style: const TextStyle(
+                  color: ThemeConfig.primaryDarkBlue,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Download our Excel template with the correct format and sample data to get started.',
+            style: TextStyle(
+              color: ThemeConfig.darkTextElements.withOpacity(0.7),
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 16),
+          AuthOutlineButton(
+            text: 'Download Template',
+            onPressed: _isLoading ? null : _downloadTemplate,
+            borderColor: ThemeConfig.primaryDarkBlue,
+            textColor: ThemeConfig.primaryDarkBlue,
+            icon: Icons.file_download,
+          ),
+        ],
       ),
     );
   }
@@ -152,13 +213,13 @@ class _ExcelImportScreenState extends State<ExcelImportScreen> {
     );
   }
 
-  /// Build file selection section
+  /// Build file selection area
   Widget _buildFileSelection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Select Excel File',
+          'Excel Schedule File',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             color: ThemeConfig.primaryDarkBlue,
             fontWeight: FontWeight.w600,
@@ -167,86 +228,130 @@ class _ExcelImportScreenState extends State<ExcelImportScreen> {
         
         const SizedBox(height: 12),
         
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: _selectedFileName != null 
-                  ? ThemeConfig.goldAccent 
-                  : ThemeConfig.darkTextElements.withOpacity(0.3),
-              width: 2,
-            ),
-            borderRadius: BorderRadius.circular(12),
-            color: _selectedFileName != null 
-                ? ThemeConfig.goldAccent.withOpacity(0.05)
-                : Colors.transparent,
-          ),
-          child: Column(
-            children: [
-              Icon(
-                _selectedFileName != null ? Icons.file_present : Icons.file_upload_outlined,
-                size: 48,
+        // Enhanced file selection area with drag-and-drop visual hints
+        InkWell(
+          onTap: _isLoading ? null : _selectFile,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              border: Border.all(
                 color: _selectedFileName != null 
-                    ? ThemeConfig.goldAccent 
-                    : ThemeConfig.darkTextElements.withOpacity(0.5),
+                    ? ThemeConfig.goldAccent
+                    : ThemeConfig.darkTextElements.withOpacity(0.3),
+                width: _selectedFileName != null ? 2 : 1,
               ),
-              
-              const SizedBox(height: 12),
-              
-              if (_selectedFileName != null) ...[
-                Text(
-                  _selectedFileName!,
-                  style: const TextStyle(
-                    color: ThemeConfig.primaryDarkBlue,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+              borderRadius: BorderRadius.circular(16),
+              color: _selectedFileName != null 
+                  ? ThemeConfig.goldAccent.withOpacity(0.05)
+                  : Colors.transparent,
+            ),
+            child: Column(
+              children: [
+                // File icon with animation
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: _selectedFileName != null 
+                        ? ThemeConfig.goldAccent.withOpacity(0.2)
+                        : ThemeConfig.primaryDarkBlue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(50),
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'File selected successfully',
-                  style: TextStyle(
-                    color: ThemeConfig.darkTextElements.withOpacity(0.7),
-                    fontSize: 14,
-                  ),
-                ),
-              ] else ...[
-                Text(
-                  'Tap to select Excel file',
-                  style: TextStyle(
-                    color: ThemeConfig.darkTextElements.withOpacity(0.7),
-                    fontSize: 16,
+                  child: Icon(
+                    _selectedFileName != null 
+                        ? Icons.check_circle_outline
+                        : Icons.upload_file,
+                    size: 48,
+                    color: _selectedFileName != null 
+                        ? ThemeConfig.goldAccent
+                        : ThemeConfig.primaryDarkBlue,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Supported formats: .xlsx, .xls',
-                  style: TextStyle(
-                    color: ThemeConfig.darkTextElements.withOpacity(0.5),
-                    fontSize: 12,
+                
+                const SizedBox(height: 16),
+                
+                if (_selectedFileName != null) ...[
+                  Text(
+                    _selectedFileName!,
+                    style: const TextStyle(
+                      color: ThemeConfig.primaryDarkBlue,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'File ready for import',
+                    style: TextStyle(
+                      color: ThemeConfig.goldAccent,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ] else ...[
+                  Text(
+                    'Select your Excel schedule file',
+                    style: const TextStyle(
+                      color: ThemeConfig.primaryDarkBlue,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Click to browse files or drag and drop',
+                    style: TextStyle(
+                      color: ThemeConfig.darkTextElements.withOpacity(0.7),
+                      fontSize: 14,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Supported: .xlsx, .xls, .xlsm (Max 10MB)',
+                    style: TextStyle(
+                      color: ThemeConfig.darkTextElements.withOpacity(0.5),
+                      fontSize: 12,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
         
         const SizedBox(height: 12),
         
-        // File selection button
-        AuthButton(
-          text: _selectedFileName != null ? 'Change File' : 'Select File',
-          onPressed: _isLoading ? null : _selectFile,
-          backgroundColor: _selectedFileName != null 
-              ? Colors.transparent
-              : ThemeConfig.primaryDarkBlue,
-          textColor: _selectedFileName != null 
-              ? ThemeConfig.primaryDarkBlue
-              : ThemeConfig.lightBackground,
-          hasBorder: _selectedFileName != null,
-          icon: Icons.folder_open,
+        // Action buttons
+        Row(
+          children: [
+            Expanded(
+              child: AuthButton(
+                text: _selectedFileName != null ? 'Change File' : 'Browse Files',
+                onPressed: _isLoading ? null : _selectFile,
+                backgroundColor: ThemeConfig.primaryDarkBlue,
+                textColor: ThemeConfig.lightBackground,
+                icon: Icons.folder_open,
+              ),
+            ),
+            if (_selectedFileName != null) ...[
+              const SizedBox(width: 12),
+              Expanded(
+                child: AuthOutlineButton(
+                  text: 'Clear',
+                  onPressed: _isLoading ? null : _clearSelectedFile,
+                  borderColor: ThemeConfig.darkTextElements.withOpacity(0.3),
+                  textColor: ThemeConfig.darkTextElements,
+                  icon: Icons.clear,
+                ),
+              ),
+            ],
+          ],
         ),
       ],
     );
@@ -476,32 +581,206 @@ class _ExcelImportScreenState extends State<ExcelImportScreen> {
   /// Handle file selection
   Future<void> _selectFile() async {
     try {
+      setState(() {
+        _errorMessage = null;
+        _successMessage = null;
+      });
+
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['xlsx', 'xls'],
+        allowedExtensions: ['xlsx', 'xls', 'xlsm'], // Added xlsm support
         allowMultiple: false,
+        dialogTitle: 'Select Excel Schedule File',
+        withData: true, // Ensure we get the file bytes
       );
 
       if (result != null && result.files.isNotEmpty) {
         final file = result.files.first;
+        
+        // Validate file size (max 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+          setState(() {
+            _errorMessage = 'File size too large. Maximum allowed size is 10MB.';
+          });
+          return;
+        }
+        
+        // Validate file extension
+        final extension = file.extension?.toLowerCase();
+        if (extension == null || !['xlsx', 'xls', 'xlsm'].contains(extension)) {
+          setState(() {
+            _errorMessage = 'Invalid file type. Please select an Excel file (.xlsx, .xls, or .xlsm).';
+          });
+          return;
+        }
         
         if (file.bytes != null) {
           setState(() {
             _selectedFileName = file.name;
             _selectedFileBytes = file.bytes!;
             _errorMessage = null;
-            _successMessage = null;
+            _successMessage = 'File selected successfully! File size: ${_formatFileSize(file.size)}';
             _parsedCourses = null;
           });
+          
+          // Auto-analyze the file structure (but don't fail if this doesn't work)
+          _analyzeFileStructure();
         } else {
           setState(() {
-            _errorMessage = 'Could not read file. Please try again.';
+            _errorMessage = 'Could not read file content. Please try selecting the file again.';
           });
         }
       }
     } catch (e) {
+      debugPrint('Error selecting file: $e');
       setState(() {
         _errorMessage = 'Error selecting file: ${e.toString()}';
+      });
+    }
+  }
+
+  /// Clear selected file
+  void _clearSelectedFile() {
+    setState(() {
+      _selectedFileName = null;
+      _selectedFileBytes = null;
+      _errorMessage = null;
+      _successMessage = null;
+      _parsedCourses = null;
+    });
+  }
+
+  /// Download Excel template
+  void _downloadTemplate() {
+    try {
+      final templateBytes = ExcelTemplateService.generateTemplate();
+      
+      // Create download for web
+      final blob = html.Blob([templateBytes]);
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      
+      final anchor = html.document.createElement('a') as html.AnchorElement
+        ..href = url
+        ..style.display = 'none'
+        ..download = 'ELTE_Schedule_Template.xlsx';
+      
+      html.document.body?.children.add(anchor);
+      anchor.click();
+      html.document.body?.children.remove(anchor);
+      html.Url.revokeObjectUrl(url);
+      
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Template downloaded successfully!'),
+          backgroundColor: Colors.green.shade600,
+          action: SnackBarAction(
+            label: 'OK',
+            textColor: Colors.white,
+            onPressed: () {},
+          ),
+        ),
+      );
+    } catch (e) {
+      debugPrint('Error downloading template: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Error downloading template. Please try again.'),
+          backgroundColor: Colors.red.shade600,
+        ),
+      );
+    }
+  }
+
+  /// Format file size for display
+  String _formatFileSize(int bytes) {
+    if (bytes < 1024) {
+      return '$bytes B';
+    } else if (bytes < 1024 * 1024) {
+      return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    } else {
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    }
+  }
+
+  /// Analyze file structure to provide helpful feedback
+  Future<void> _analyzeFileStructure() async {
+    if (_selectedFileBytes == null) return;
+    
+    try {
+      debugPrint('Analyzing file structure...');
+      debugPrint('File size: ${_selectedFileBytes!.length} bytes');
+      
+      // Quick analysis without full parsing
+      final excel = ExcelLib.Excel.decodeBytes(_selectedFileBytes!);
+      final sheetNames = excel.tables.keys.toList();
+      
+      debugPrint('Found ${sheetNames.length} sheets: $sheetNames');
+      
+      if (sheetNames.isEmpty) {
+        setState(() {
+          _successMessage = '''File selected successfully!
+File size: ${_formatFileSize(_selectedFileBytes!.length)}
+
+Note: Could not analyze sheet structure, but file upload was successful.
+You can proceed with the import to validate the content.''';
+        });
+        return;
+      }
+      
+      final firstSheet = excel.tables[sheetNames.first];
+      
+      if (firstSheet == null) {
+        setState(() {
+          _successMessage = '''File selected successfully!
+File size: ${_formatFileSize(_selectedFileBytes!.length)}
+
+Note: Could not access worksheet data, but file upload was successful.
+You can proceed with the import to validate the content.''';
+        });
+        return;
+      }
+      
+      debugPrint('First sheet: ${sheetNames.first}, Rows: ${firstSheet.maxRows}, Columns: ${firstSheet.maxColumns}');
+      
+      // Try to read the first few cells to validate the structure
+      String headerInfo = '';
+      if (firstSheet.maxRows > 0) {
+        final headerRow = firstSheet.row(0);
+        final headerValues = headerRow.take(5).map((cell) => 
+          cell?.value?.toString() ?? 'Empty'
+        ).join(', ');
+        headerInfo = '\n• Sample headers: $headerValues';
+        debugPrint('Header row: $headerValues');
+      }
+      
+      setState(() {
+        _successMessage = '''File analyzed successfully!
+• File size: ${_formatFileSize(_selectedFileBytes!.length)}
+• Sheets found: ${sheetNames.length}
+• Primary sheet: "${sheetNames.first}"
+• Rows: ${firstSheet.maxRows}
+• Columns: ${firstSheet.maxColumns}$headerInfo
+
+Ready for import.''';
+      });
+      
+    } catch (e, stackTrace) {
+      debugPrint('Error analyzing file structure: $e');
+      debugPrint('Stack trace: $stackTrace');
+      
+      // Don't show error - just show success with note
+      setState(() {
+        _successMessage = '''File uploaded successfully!
+File size: ${_formatFileSize(_selectedFileBytes!.length)}
+
+Note: Could not preview file structure, but upload was successful.
+You can proceed with the import - detailed validation will happen during processing.
+
+If import fails, please ensure:
+• File is a valid Excel format (.xlsx, .xls, .xlsm)
+• File is not password-protected
+• File contains the required column headers''';
       });
     }
   }
@@ -569,13 +848,33 @@ class _ExcelImportScreenState extends State<ExcelImportScreen> {
       return;
     }
 
+    debugPrint('📊 Import: Starting import process');
+    debugPrint('📊 Import: User ID: ${user.uid}');
+    debugPrint('📊 Import: Selected semester: $_selectedSemester');
+    debugPrint('📊 Import: Number of courses: ${_parsedCourses?.length ?? 0}');
+    
+    if (_parsedCourses != null) {
+      for (int i = 0; i < _parsedCourses!.length; i++) {
+        final course = _parsedCourses![i];
+        debugPrint('📊 Import: Course $i - ${course.courseCode}: ${course.courseName}');
+        debugPrint('📊 Import: Course $i - Schedule slots: ${course.scheduleSlots.length}');
+      }
+    }
+
     try {
       // Import courses to the selected semester
       await firebaseService.importCoursesToSemester(
-        userId: user.uid,
-        semesterId: _selectedSemester!,
-        courses: _parsedCourses!,
+        user.uid,
+        _selectedSemester!,
+        _parsedCourses!,
       );
+
+      debugPrint('📊 Import: Successfully completed Firebase import');
+
+      // Set the imported semester as current semester
+      final semesterService = Provider.of<SemesterService>(context, listen: false);
+      debugPrint('📊 Import: Setting current semester to $_selectedSemester');
+      semesterService.setSelectedSemester(_selectedSemester!);
 
       setState(() {
         _successMessage = 'Successfully imported ${_parsedCourses!.length} courses to the selected semester!';
@@ -588,11 +887,13 @@ class _ExcelImportScreenState extends State<ExcelImportScreen> {
       // Navigate back after successful import
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {
+          debugPrint('📊 Import: Navigating back with success result');
           Navigator.of(context).pop(true); // Return true to indicate successful import
         }
       });
 
     } catch (e) {
+      debugPrint('❌ Import: Failed with error: $e');
       setState(() {
         _errorMessage = 'Failed to save courses: ${e.toString()}';
       });

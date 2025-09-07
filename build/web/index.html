@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="/">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="University calendar application for ELTE students to import and manage their course schedules">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="ELTE Calendar">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>ELTE Calendar</title>
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    /* Loading styles using specified color palette */
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #F4F4F4; /* Light background */
+      font-family: 'Roboto', sans-serif;
+    }
+    
+    .loading {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #F4F4F4;
+    }
+    
+    .loading-icon {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+      color: #03284F; /* Primary dark blue */
+    }
+    
+    .loading-text {
+      color: #060605; /* Dark text */
+      font-size: 18px;
+      font-weight: 500;
+    }
+    
+    .loading-spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid #C6A882; /* Gold accent */
+      border-top: 3px solid #03284F; /* Primary dark blue */
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-top: 16px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading screen shown while Flutter initializes -->
+  <div id="loading" class="loading">
+    <svg class="loading-icon" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+    </svg>
+    <div class="loading-text">ELTE Calendar</div>
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- Flutter app container -->
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      const loading = document.querySelector('#loading');
+      if (loading) {
+        loading.remove();
+      }
+    });
+  </script>
+
+  <!-- Firebase configuration will be added here -->
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+    
+    // TODO: Replace with your Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAl4fkaO1z6ipOqgxt9xqzr2Tz1vLyTj2c",
+      authDomain: "elte-calendar-61bb3.firebaseapp.com",
+      projectId: "elte-calendar-61bb3",
+      storageBucket: "elte-calendar-61bb3.firebasestorage.app",
+      messagingSenderId: "971124387883",
+      appId: "1:971124387883:web:620dda2152c9ec032a7a6e",
+      measurementId: "G-JG57EJ1BEJ"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+  </script>
+
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

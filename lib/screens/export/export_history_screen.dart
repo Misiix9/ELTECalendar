@@ -4,11 +4,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../models/export_model.dart';
+import '../../services/export_service.dart';
 import '../../config/theme_config.dart';
 import '../../config/localization_config.dart';
-import '../../services/export_service.dart';
-import '../../models/export_model.dart';
-import '../../widgets/common_widgets/empty_state_widget.dart';
 
 /// Export history screen showing past exports and management options
 class ExportHistoryScreen extends StatefulWidget {
@@ -236,29 +235,84 @@ class _ExportHistoryScreenState extends State<ExportHistoryScreen> {
     final filteredHistory = _getFilteredHistory(allHistory);
     
     if (allHistory.isEmpty) {
-      return EmptyStateWidget(
-        icon: Icons.history,
-        title: localizations?.getString('noExportHistory') ?? 'No Export History',
-        message: localizations?.getString('noExportHistoryMessage') ?? 
-          'Your export history will appear here after you create your first export.',
-        actionLabel: localizations?.getString('createExport') ?? 'Create Export',
-        onActionPressed: () {
-          Navigator.of(context).pushNamed('/export');
-        },
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.history,
+              size: 64,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              localizations?.getString('noExportHistory') ?? 'No Export History',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              localizations?.getString('noExportHistoryMessage') ?? 
+                'Your export history will appear here after you create your first export.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade500,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pushNamed('/export');
+              },
+              child: Text(localizations?.getString('createExport') ?? 'Create Export'),
+            ),
+          ],
+        ),
       );
     }
 
     if (filteredHistory.isEmpty) {
-      return EmptyStateWidget(
-        icon: Icons.filter_list_off,
-        title: 'No Matching Exports',
-        message: 'No exports match the selected filter criteria.',
-        actionLabel: 'Clear Filter',
-        onActionPressed: () {
-          setState(() {
-            _selectedFilter = 'all';
-          });
-        },
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.filter_list_off,
+              size: 64,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No Matching Exports',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'No exports match the selected filter criteria.',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade500,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _selectedFilter = 'all';
+                });
+              },
+              child: const Text('Clear Filter'),
+            ),
+          ],
+        ),
       );
     }
 

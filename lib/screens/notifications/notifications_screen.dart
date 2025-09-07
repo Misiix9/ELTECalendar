@@ -3,13 +3,11 @@
 // Step: 7.4 - Notification List and Management
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import '../../models/notification_model.dart';
+import '../../services/notification_service.dart';
 import '../../config/theme_config.dart';
 import '../../config/localization_config.dart';
-import '../../services/notification_service.dart';
-import '../../models/notification_model.dart';
-import '../../widgets/common_widgets/empty_state_widget.dart';
-import '../../widgets/common_widgets/loading_indicator.dart';
+import 'package:provider/provider.dart';
 
 /// Notifications screen displaying all user notifications with management options
 class NotificationsScreen extends StatefulWidget {
@@ -21,7 +19,8 @@ class NotificationsScreen extends StatefulWidget {
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
   String _selectedFilter = 'all';
-  final List<String> _filterOptions = ['all', 'unread', 'course_reminder', 'schedule_change'];
+  // Note: Uncomment this when implementing filter functionality
+  // final List<String> _filterOptions = ['all', 'unread', 'course_reminder', 'schedule_change'];
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +31,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       body: Consumer<NotificationService>(
         builder: (context, notificationService, child) {
           if (!notificationService.isInitialized) {
-            return const Center(child: LoadingIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
           return Column(
@@ -210,16 +209,45 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final filteredNotifications = _getFilteredNotifications(notificationService);
     
     if (filteredNotifications.isEmpty) {
-      return EmptyStateWidget(
-        icon: _selectedFilter == 'unread' ? Icons.mark_email_read : Icons.notifications_none,
-        title: _getEmptyTitle(),
-        message: _getEmptyMessage(),
-        actionLabel: _selectedFilter != 'all' ? 'Clear Filter' : null,
-        onActionPressed: _selectedFilter != 'all' ? () {
-          setState(() {
-            _selectedFilter = 'all';
-          });
-        } : null,
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              _selectedFilter == 'unread' ? Icons.mark_email_read : Icons.notifications_none,
+              size: 64,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _getEmptyTitle(),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _getEmptyMessage(),
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade500,
+              ),
+            ),
+            if (_selectedFilter != 'all') ...[
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _selectedFilter = 'all';
+                  });
+                },
+                child: const Text('Clear Filter'),
+              ),
+            ],
+          ],
+        ),
       );
     }
 

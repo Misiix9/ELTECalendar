@@ -2,7 +2,6 @@
 // Purpose: Excel file parsing service for Hungarian university schedules
 // Step: 3.1 - Excel Parser Service Implementation
 
-import 'dart:typed_data';
 import 'package:excel/excel.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -49,11 +48,13 @@ class ExcelParserService {
       debugPrint('$_logTag: Starting Excel file parsing for: $fileName');
       
       // Validate file extension
-      if (!fileName.toLowerCase().endsWith('.xlsx') && 
-          !fileName.toLowerCase().endsWith('.xls')) {
+      final extension = fileName.toLowerCase();
+      if (!extension.endsWith('.xlsx') && 
+          !extension.endsWith('.xls') &&
+          !extension.endsWith('.xlsm')) {
         return ExcelParseResult(
           success: false,
-          message: 'Invalid file format. Please use .xlsx or .xls files.',
+          message: 'Invalid file format. Please use .xlsx, .xls, or .xlsm files.',
           courses: [],
         );
       }
@@ -61,14 +62,42 @@ class ExcelParserService {
       // Parse Excel file
       Excel excel;
       try {
+        debugPrint('$_logTag: Attempting to decode Excel file of ${fileBytes.length} bytes');
         excel = Excel.decodeBytes(fileBytes);
+        debugPrint('$_logTag: Excel file decoded successfully');
       } catch (e) {
         debugPrint('$_logTag: Failed to decode Excel file: $e');
-        return ExcelParseResult(
-          success: false,
-          message: 'Unable to read Excel file. Please ensure it is not corrupted.',
-          courses: [],
-        );
+        
+        // Handle specific style-related errors
+        if (e.toString().contains('styles') || 
+            e.toString().contains('Damaged Excel') ||
+            e.toString().contains('Invalid argument')) {
+          return ExcelParseResult(
+            success: false,
+            message: 'Excel file contains formatting that cannot be processed.\n\n'
+                    'To fix this issue:\n'
+                    '1. Open the file in Microsoft Excel or Google Sheets\n'
+                    '2. Select all data (Ctrl+A)\n'
+                    '3. Copy the data (Ctrl+C)\n'
+                    '4. Create a new workbook\n'
+                    '5. Paste as Values Only (Ctrl+Shift+V → Values)\n'
+                    '6. Save as a new .xlsx file\n'
+                    '7. Try uploading the new file\n\n'
+                    'This removes complex formatting that causes parsing issues.\n\n'
+                    'Technical details: ${e.toString()}',
+            courses: [],
+          );
+        } else {
+          return ExcelParseResult(
+            success: false,
+            message: 'Unable to read Excel file: ${e.toString()}.\n\n'
+                    'Please ensure the file is:\n'
+                    '• Not corrupted\n'
+                    '• Not password-protected\n'
+                    '• A valid Excel format (.xlsx, .xls, .xlsm)',
+            courses: [],
+          );
+        }
       }
 
       // Get the first sheet
@@ -218,8 +247,17 @@ class ExcelParserService {
     // Parse schedule information
     final scheduleSlots = _parseScheduleInfo(scheduleInfo);
 
+    // Generate unique ID to avoid overwriting courses with same class code
+    // Use combination of subject code, class code, type, and schedule to ensure uniqueness
+    final uniqueId = '${subjectCode}_${courseCode}_${courseType}_${scheduleInfo.hashCode.abs()}'.replaceAll(' ', '_');
+    
+    // Update schedule slots with the course ID
+    final updatedScheduleSlots = scheduleSlots.map((slot) => slot.copyWith(courseId: uniqueId)).toList();
+    
+    debugPrint('$_logTag: Creating course: "$subjectName" ($subjectCode) with unique ID: $uniqueId and ${updatedScheduleSlots.length} schedule slots');
+
     return Course(
-      id: courseCode, // Use course code as ID  
+      id: uniqueId, // Use unique generated ID
       courseCode: subjectCode, // Tárgy kódja
       courseName: subjectName, // Tárgy neve
       classCode: courseCode, // Kurzus kódja 
@@ -227,7 +265,7 @@ class ExcelParserService {
       weeklyHours: hours, // Using hours as weekly hours
       rawScheduleInfo: scheduleInfo,
       instructors: instructors.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList(),
-      scheduleSlots: scheduleSlots,
+      scheduleSlots: updatedScheduleSlots,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
@@ -243,17 +281,23 @@ class ExcelParserService {
   /// Parse the "Órarend infó" field into schedule slots
   /// 
   /// Expected formats:
-  /// - "H 08:00-09:30, CS 10:00-11:30" (multiple slots)
-  /// - "K 14:00-15:30" (single slot)
-  /// - "P 16:00-17:30, SZ 09:00-10:30" (including Saturday)
+  /// - "SZE:16:45-17:30(00-114 (LD-00-114))" (single slot)
+  /// - "H:08:00-09:30(A1-101 (EA-A1-101)); CS:10:00-11:30(B2-205 (GY-B2-205))" (multiple slots)
+  /// - Sessions separated by semicolon
   static List<ScheduleSlot> _parseScheduleInfo(String scheduleInfo) {
     final List<ScheduleSlot> slots = [];
     
-    if (scheduleInfo.isEmpty) return slots;
+    debugPrint('$_logTag: Parsing schedule info: "$scheduleInfo"');
+    
+    if (scheduleInfo.isEmpty) {
+      debugPrint('$_logTag: Schedule info is empty');
+      return slots;
+    }
 
     try {
-      // Split by comma to handle multiple time slots
-      final parts = scheduleInfo.split(',');
+      // Split by semicolon to handle multiple time slots
+      final parts = scheduleInfo.split(';');
+      debugPrint('$_logTag: Split into ${parts.length} parts: ${parts.map((p) => '"${p.trim()}"').toList()}');
       
       for (final part in parts) {
         final trimmedPart = part.trim();
@@ -262,26 +306,30 @@ class ExcelParserService {
         // Parse individual schedule slot
         final slot = _parseScheduleSlot(trimmedPart);
         if (slot != null) {
+          debugPrint('$_logTag: Successfully parsed slot: day=${slot.dayOfWeek}, ${slot.startTime.hour}:${slot.startTime.minute.toString().padLeft(2, '0')}-${slot.endTime.hour}:${slot.endTime.minute.toString().padLeft(2, '0')}, location="${slot.location}"');
           slots.add(slot);
+        } else {
+          debugPrint('$_logTag: Failed to parse slot: "$trimmedPart"');
         }
       }
     } catch (e) {
-      debugPrint('ExcelParserService: Error parsing schedule info "$scheduleInfo": $e');
+      debugPrint('$_logTag: Error parsing schedule info "$scheduleInfo": $e');
     }
 
+    debugPrint('$_logTag: Parsed ${slots.length} schedule slots total');
     return slots;
   }
 
-  /// Parse a single schedule slot (e.g., "H 08:00-09:30")
+  /// Parse a single schedule slot (e.g., "SZE:16:45-17:30(00-114 (LD-00-114))")
   static ScheduleSlot? _parseScheduleSlot(String slotInfo) {
     try {
-      // Regular expression to match day abbreviation and time range
-      // Handles: "H 08:00-09:30", "SZE 14:00-15:30", etc.
-      final regex = RegExp(r'^(H|K|SZE|CS|P|SZ)\s+(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})');
-      final match = regex.firstMatch(slotInfo);
+      // Updated regex to handle the new format with location in parentheses
+      // Format: DAY:HH:MM-HH:MM(LOCATION (EXACT_CODE))
+      final regex = RegExp(r'^(H|K|SZE|CS|P|SZ)\s*:\s*(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})\s*\(([^)]+)\)');
+      final match = regex.firstMatch(slotInfo.trim());
 
       if (match == null) {
-        debugPrint('ExcelParserService: Could not parse schedule slot: "$slotInfo"');
+        debugPrint('$_logTag: Could not parse schedule slot: "$slotInfo"');
         return null;
       }
 
@@ -290,52 +338,45 @@ class ExcelParserService {
       final startMinute = int.parse(match.group(3)!);
       final endHour = int.parse(match.group(4)!);
       final endMinute = int.parse(match.group(5)!);
+      final locationInfo = match.group(6)!; // e.g., "00-114 (LD-00-114)"
+
+      // Parse location info to extract classroom and exact code
+      String classroom = locationInfo;
+      String exactCode = '';
+      
+      // Check if there's an exact code in parentheses within the location
+      final locationMatch = RegExp(r'^([^(]+)\s*\(([^)]+)\)').firstMatch(locationInfo);
+      if (locationMatch != null) {
+        classroom = locationMatch.group(1)!.trim();
+        exactCode = locationMatch.group(2)!.trim();
+      }
 
       // Map day abbreviation to day of week
-      int? dayOfWeek;
-      
-      // Special handling for SZ (Saturday) - only valid after P (Friday)
-      if (dayAbbr == 'SZ') {
-        dayOfWeek = _dayMapping['SZ'];
-      } else {
-        dayOfWeek = _dayMapping[dayAbbr];
-      }
+      int? dayOfWeek = _dayMapping[dayAbbr];
 
       if (dayOfWeek == null) {
-        debugPrint('ExcelParserService: Unknown day abbreviation: "$dayAbbr"');
+        debugPrint('$_logTag: Unknown day abbreviation: "$dayAbbr"');
         return null;
       }
+
+      // Create location string with both classroom and exact code
+      final fullLocation = exactCode.isNotEmpty ? '$classroom ($exactCode)' : classroom;
+
+      debugPrint('$_logTag: Parsed slot - Day: $dayAbbr ($dayOfWeek), Time: $startHour:$startMinute-$endHour:$endMinute, Location: $fullLocation');
 
       return ScheduleSlot(
         dayOfWeek: dayOfWeek,
         startTime: TimeOfDay(hour: startHour, minute: startMinute),
         endTime: TimeOfDay(hour: endHour, minute: endMinute),
-        location: _extractLocation(slotInfo) ?? '',
+        location: fullLocation,
         courseId: '',
         displayColor: const Color(0xFF03284F), // Default color
       );
 
     } catch (e) {
-      debugPrint('ExcelParserService: Error parsing schedule slot "$slotInfo": $e');
+      debugPrint('$_logTag: Error parsing schedule slot "$slotInfo": $e');
       return null;
     }
-  }
-
-  /// Extract location information from schedule slot if present
-  /// Some schedule formats may include room/building info
-  static String? _extractLocation(String slotInfo) {
-    // Look for location info after the time (e.g., "H 08:00-09:30 Room 101")
-    final parts = slotInfo.split(' ');
-    if (parts.length > 2) {
-      // Everything after the time range could be location
-      final timePattern = RegExp(r'\d{1,2}:\d{2}-\d{1,2}:\d{2}');
-      final match = timePattern.firstMatch(slotInfo);
-      if (match != null) {
-        final afterTime = slotInfo.substring(match.end).trim();
-        return afterTime.isNotEmpty ? afterTime : null;
-      }
-    }
-    return null;
   }
 
 }

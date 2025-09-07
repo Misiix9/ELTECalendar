@@ -16,6 +16,9 @@ import 'services/auth_service.dart';
 import 'services/firebase_service.dart';
 import 'services/semester_service.dart';
 import 'services/calendar_service.dart';
+import 'services/notification_service.dart';
+import 'services/theme_service.dart';
+import 'services/language_service.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
@@ -23,9 +26,12 @@ import 'screens/auth/email_verification_screen.dart';
 import 'screens/calendar/calendar_main_screen.dart';
 import 'screens/import/excel_import_screen.dart';
 import 'screens/settings/semester_management_screen.dart';
+import 'screens/settings/settings_main_screen.dart';
 import 'screens/courses/course_list_screen.dart';
 import 'screens/courses/course_edit_screen.dart';
+import 'screens/notifications/notifications_screen.dart';
 import 'widgets/common_widgets/auth_wrapper.dart';
+import 'widgets/navigation/navigation_wrapper.dart';
 
 /// Main application entry point
 /// Initializes Firebase, Hive local storage, and app configuration
@@ -72,6 +78,9 @@ class _ELTECalendarAppState extends State<ELTECalendarApp> {
   late FirebaseService _firebaseService;
   late SemesterService _semesterService;
   late CalendarService _calendarService;
+  late NotificationService _notificationService;
+  late ThemeService _themeService;
+  late LanguageService _languageService;
   bool _isInitialized = false;
 
   @override
@@ -83,15 +92,28 @@ class _ELTECalendarAppState extends State<ELTECalendarApp> {
   /// Initialize all required services
   Future<void> _initializeServices() async {
     try {
+      debugPrint('Starting service initialization...');
+      
       _authService = AuthService();
       _firebaseService = FirebaseService();
       _semesterService = SemesterService();
       _calendarService = CalendarService(_firebaseService, _authService, _semesterService);
+      _notificationService = NotificationService(_authService, _firebaseService, _calendarService, _semesterService);
+      _themeService = ThemeService();
+      _languageService = LanguageService();
 
-      // Initialize services
-      await _firebaseService.initialize();
-      await _authService.initialize();
-      await _semesterService.initialize();
+      // Initialize services with timeout to prevent hanging
+      await Future.wait([
+        _firebaseService.initialize().timeout(const Duration(seconds: 10)),
+        _semesterService.initialize().timeout(const Duration(seconds: 5)),
+        _themeService.initialize().timeout(const Duration(seconds: 5)),
+        _languageService.initialize().timeout(const Duration(seconds: 5)),
+      ]);
+      
+      // Initialize auth service separately with timeout
+      await _authService.initialize().timeout(const Duration(seconds: 15));
+      
+      debugPrint('All services initialized successfully');
 
       if (mounted) {
         setState(() {
@@ -132,45 +154,55 @@ class _ELTECalendarAppState extends State<ELTECalendarApp> {
         // Calendar service provider
         ChangeNotifierProvider.value(value: _calendarService),
         
+        // Notification service provider
+        ChangeNotifierProvider.value(value: _notificationService),
+        
+        // Theme service provider
+        ChangeNotifierProvider.value(value: _themeService),
+        
+        // Language service provider
+        ChangeNotifierProvider.value(value: _languageService),
+        
         // TODO: Add other service providers as they are implemented
         // - ExcelParserService
-        // - NotificationService
       ],
-      child: MaterialApp(
-        // Application metadata
-        title: 'ELTE Calendar',
-        debugShowCheckedModeBanner: false,
-        
-        // Theme configuration using specified color palette
-        theme: ThemeConfig.lightTheme,
-        darkTheme: ThemeConfig.darkTheme,
-        themeMode: ThemeMode.system, // Respect system theme preference
-        
-        // Localization configuration
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: AppLocalizations.supportedLocales,
-        locale: const Locale('hu'), // Default to Hungarian as specified
+      child: Consumer2<ThemeService, LanguageService>(
+        builder: (context, themeService, languageService, child) => MaterialApp(
+          // Application metadata
+          title: 'ELTE Calendar',
+          debugShowCheckedModeBanner: false,
+          
+          // Theme configuration using ThemeService
+          theme: ThemeConfig.lightTheme,
+          darkTheme: ThemeConfig.darkTheme,
+          themeMode: themeService.themeMode, // Use ThemeService for theme management
+          
+          // Localization configuration
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: languageService.currentLocale, // Use LanguageService for dynamic locale
         
         // Authentication wrapper handles routing based on auth state
         home: const AuthWrapper(),
         
         // Route configuration with all authentication screens
         routes: {
-          '/': (context) => const AuthWrapper(),
           '/login': (context) => const LoginScreen(),
           '/register': (context) => const RegisterScreen(),
           '/forgot-password': (context) => const ForgotPasswordScreen(),
           '/email-verification': (context) => const EmailVerificationScreen(),
-          '/calendar': (context) => const AuthGuard(child: CalendarMainScreen()),
-          '/import': (context) => const AuthGuard(child: ExcelImportScreen()),
-          '/semester-management': (context) => const AuthGuard(child: SemesterManagementScreen()),
-          '/courses': (context) => const AuthGuard(child: CourseListScreen()),
-          '/course-create': (context) => const AuthGuard(child: CourseEditScreen()),
+          '/calendar': (context) => const AuthGuard(child: NavigationWrapper(child: CalendarMainScreen(), currentIndex: 0)),
+          '/import': (context) => const AuthGuard(child: NavigationWrapper(child: ExcelImportScreen(), currentIndex: 0)),
+          '/semester-management': (context) => const AuthGuard(child: NavigationWrapper(child: SemesterManagementScreen(), currentIndex: 3)),
+          '/settings': (context) => const AuthGuard(child: NavigationWrapper(child: SettingsMainScreen(), currentIndex: 3)),
+          '/courses': (context) => const AuthGuard(child: NavigationWrapper(child: CourseListScreen(), currentIndex: 1)),
+          '/course-create': (context) => const AuthGuard(child: NavigationWrapper(child: CourseEditScreen(), currentIndex: 1)),
+          '/notifications': (context) => const AuthGuard(child: NavigationWrapper(child: NotificationsScreen(), currentIndex: 2)),
           // TODO: Add additional routes as screens are implemented
         },
         
@@ -188,6 +220,7 @@ class _ELTECalendarAppState extends State<ELTECalendarApp> {
         navigatorObservers: [
           if (kDebugMode) AuthNavigationObserver(),
         ],
+        ),
       ),
     );
   }

@@ -12,7 +12,7 @@ import '../models/semester_model.dart';
 import '../models/export_model.dart';
 import '../services/calendar_service.dart';
 import '../services/semester_service.dart';
-import '../services/auth_service.dart';
+// import '../services/auth_service.dart'; // TODO: Uncomment when user preferences are implemented
 
 /// Comprehensive export service handling multiple export formats
 /// Supports ICS calendar, PDF schedule, and Excel exports
@@ -22,7 +22,7 @@ class ExportService extends ChangeNotifier {
   // Dependencies
   final CalendarService _calendarService;
   final SemesterService _semesterService;
-  final AuthService _authService; // TODO: Will be used for user preferences
+  // final AuthService _authService; // TODO: Will be used for user preferences - currently unused
 
   // State
   bool _isExporting = false;
@@ -33,7 +33,7 @@ class ExportService extends ChangeNotifier {
   ExportService(
     this._calendarService,
     this._semesterService,
-    this._authService,
+    // this._authService, // TODO: Add back when user preferences are implemented
   );
 
   // Getters
@@ -198,11 +198,10 @@ class ExportService extends ChangeNotifier {
     if (options.startDate != null || options.endDate != null) {
       final semester = _semesterService.currentSemester;
       if (semester != null) {
-        final semesterStart = options.startDate ?? semester.startDate;
-        final semesterEnd = options.endDate ?? semester.endDate;
-        
-        // For now, include all courses in semester - could be refined
-        // to filter by actual schedule dates
+        // TODO: Implement date range filtering based on actual schedule dates
+        // For now, include all courses in semester
+        // final semesterStart = options.startDate ?? semester.startDate;
+        // final semesterEnd = options.endDate ?? semester.endDate;
       }
     }
 
@@ -268,8 +267,8 @@ class ExportService extends ChangeNotifier {
       final description = _buildEventDescription(course, slot, options);
       buffer.writeln('DESCRIPTION:${_escapeICSText(description)}');
       
-      if (slot.location != null && slot.location!.isNotEmpty) {
-        buffer.writeln('LOCATION:${_escapeICSText(slot.location!)}');
+      if (slot.location.isNotEmpty) {
+        buffer.writeln('LOCATION:${_escapeICSText(slot.location)}');
       }
       
       // Categories
@@ -592,7 +591,7 @@ class ExportService extends ChangeNotifier {
             course.classType,
             _getDayName(slot.dayOfWeek),
             '${_formatTimeOfDay(slot.startTime)} - ${_formatTimeOfDay(slot.endTime)}',
-            slot.location ?? '-',
+            slot.location,
             course.instructors.join(', '),
           ]);
         }
@@ -699,7 +698,7 @@ class ExportService extends ChangeNotifier {
                 pw.SizedBox(height: 8),
                 pw.Text('Schedule:', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
                 ...course.scheduleSlots.map((slot) => pw.Text(
-                  '${_getDayName(slot.dayOfWeek)} ${_formatTimeOfDay(slot.startTime)} - ${_formatTimeOfDay(slot.endTime)}${slot.location != null && slot.location!.isNotEmpty ? ' at ${slot.location}' : ''}',
+                  '${_getDayName(slot.dayOfWeek)} ${_formatTimeOfDay(slot.startTime)} - ${_formatTimeOfDay(slot.endTime)}${slot.location.isNotEmpty ? ' at ${slot.location}' : ''}',
                   style: const pw.TextStyle(fontSize: 11),
                 )),
               ],
