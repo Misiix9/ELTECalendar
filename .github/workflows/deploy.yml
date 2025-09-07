@@ -34,6 +34,12 @@ jobs:
     - name: Build Flutter web
       run: flutter build web --release --base-href "/ELTECalendar/"
     
+    - name: Add .nojekyll file (disable Jekyll processing)
+      run: touch build/web/.nojekyll
+    
+    - name: Copy index.html to 404.html (for SPA routing)
+      run: cp build/web/index.html build/web/404.html
+    
     - name: Setup Pages
       uses: actions/configure-pages@v4
     
