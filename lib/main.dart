@@ -316,6 +316,8 @@ class ErrorApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final errorText = error ?? '';
+    final hasErrorDetails = errorText.isNotEmpty;
     final guidanceText = _buildInitializationGuidanceText(error);
 
     return MaterialApp(
@@ -354,12 +356,12 @@ class ErrorApp extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              if ((error ?? '').isNotEmpty) ...[
+              if (hasErrorDetails) ...[
                 const SizedBox(height: 12),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: SelectableText(
-                    'Technical details: $error',
+                    'Technical details: $errorText',
                     style: const TextStyle(
                       fontSize: 12,
                       color: _errorTextColor,
