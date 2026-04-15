@@ -55,7 +55,7 @@ jobs:
       run: flutter config --enable-web
     
     - name: Build Flutter web
-      run: flutter build web --release --base-href "/${{ env.REPO_NAME }}/" --web-renderer canvaskit --verbose
+      run: flutter build web --release --base-href "/${{ env.REPO_NAME }}/" --verbose
     
     - name: Verify build output
       run: |
