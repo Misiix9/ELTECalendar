@@ -73,14 +73,14 @@ jobs:
           FIREBASE_WEB_MESSAGING_SENDER_ID
           FIREBASE_WEB_APP_ID
         )
-        missing=0
+        has_missing=0
         for key in "${required_vars[@]}"; do
           if [ -z "${!key}" ]; then
             echo "::error::$key is not set."
-            missing=1
+            has_missing=1
           fi
         done
-        if [ "$missing" -ne 0 ]; then
+        if [ "$has_missing" -ne 0 ]; then
           echo "::error::Required Firebase web secrets are missing. Deployment aborted."
           exit 1
         fi
