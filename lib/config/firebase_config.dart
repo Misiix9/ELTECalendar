@@ -9,8 +9,70 @@ import 'package:flutter/foundation.dart';
 /// This file will need to be updated with actual Firebase project credentials
 /// after creating the Firebase project in Step 1.2
 class DefaultFirebaseOptions {
+  static const Map<String, String> _environmentValues = {
+    'FIREBASE_WEB_API_KEY': String.fromEnvironment('FIREBASE_WEB_API_KEY'),
+    'FIREBASE_API_KEY': String.fromEnvironment('FIREBASE_API_KEY'),
+    'FIREBASE_WEB_AUTH_DOMAIN': String.fromEnvironment('FIREBASE_WEB_AUTH_DOMAIN'),
+    'FIREBASE_AUTH_DOMAIN': String.fromEnvironment('FIREBASE_AUTH_DOMAIN'),
+    'FIREBASE_WEB_PROJECT_ID': String.fromEnvironment('FIREBASE_WEB_PROJECT_ID'),
+    'FIREBASE_PROJECT_ID': String.fromEnvironment('FIREBASE_PROJECT_ID'),
+    'FIREBASE_WEB_STORAGE_BUCKET': String.fromEnvironment('FIREBASE_WEB_STORAGE_BUCKET'),
+    'FIREBASE_STORAGE_BUCKET': String.fromEnvironment('FIREBASE_STORAGE_BUCKET'),
+    'FIREBASE_WEB_MESSAGING_SENDER_ID': String.fromEnvironment(
+      'FIREBASE_WEB_MESSAGING_SENDER_ID',
+    ),
+    'FIREBASE_MESSAGING_SENDER_ID': String.fromEnvironment(
+      'FIREBASE_MESSAGING_SENDER_ID',
+    ),
+    'FIREBASE_WEB_APP_ID': String.fromEnvironment('FIREBASE_WEB_APP_ID'),
+    'FIREBASE_APP_ID': String.fromEnvironment('FIREBASE_APP_ID'),
+    'FIREBASE_WEB_MEASUREMENT_ID': String.fromEnvironment(
+      'FIREBASE_WEB_MEASUREMENT_ID',
+    ),
+    'FIREBASE_MEASUREMENT_ID': String.fromEnvironment('FIREBASE_MEASUREMENT_ID'),
+    'FIREBASE_ANDROID_API_KEY': String.fromEnvironment('FIREBASE_ANDROID_API_KEY'),
+    'FIREBASE_ANDROID_APP_ID': String.fromEnvironment('FIREBASE_ANDROID_APP_ID'),
+    'FIREBASE_ANDROID_MESSAGING_SENDER_ID': String.fromEnvironment(
+      'FIREBASE_ANDROID_MESSAGING_SENDER_ID',
+    ),
+    'FIREBASE_ANDROID_PROJECT_ID': String.fromEnvironment(
+      'FIREBASE_ANDROID_PROJECT_ID',
+    ),
+    'FIREBASE_ANDROID_STORAGE_BUCKET': String.fromEnvironment(
+      'FIREBASE_ANDROID_STORAGE_BUCKET',
+    ),
+    'FIREBASE_IOS_API_KEY': String.fromEnvironment('FIREBASE_IOS_API_KEY'),
+    'FIREBASE_IOS_APP_ID': String.fromEnvironment('FIREBASE_IOS_APP_ID'),
+    'FIREBASE_IOS_MESSAGING_SENDER_ID': String.fromEnvironment(
+      'FIREBASE_IOS_MESSAGING_SENDER_ID',
+    ),
+    'FIREBASE_IOS_PROJECT_ID': String.fromEnvironment('FIREBASE_IOS_PROJECT_ID'),
+    'FIREBASE_IOS_STORAGE_BUCKET': String.fromEnvironment(
+      'FIREBASE_IOS_STORAGE_BUCKET',
+    ),
+    'FIREBASE_IOS_BUNDLE_ID': String.fromEnvironment('FIREBASE_IOS_BUNDLE_ID'),
+    'FIREBASE_MACOS_API_KEY': String.fromEnvironment('FIREBASE_MACOS_API_KEY'),
+    'FIREBASE_MACOS_APP_ID': String.fromEnvironment('FIREBASE_MACOS_APP_ID'),
+    'FIREBASE_MACOS_MESSAGING_SENDER_ID': String.fromEnvironment(
+      'FIREBASE_MACOS_MESSAGING_SENDER_ID',
+    ),
+    'FIREBASE_MACOS_PROJECT_ID': String.fromEnvironment(
+      'FIREBASE_MACOS_PROJECT_ID',
+    ),
+    'FIREBASE_MACOS_STORAGE_BUCKET': String.fromEnvironment(
+      'FIREBASE_MACOS_STORAGE_BUCKET',
+    ),
+    'FIREBASE_MACOS_BUNDLE_ID': String.fromEnvironment('FIREBASE_MACOS_BUNDLE_ID'),
+  };
+
   static String? _optionalEnv(String key) {
-    final value = String.fromEnvironment(key);
+    final value = _environmentValues[key];
+    if (value == null) {
+      throw UnsupportedError(
+        'Unknown Firebase config key requested: $key. '
+        'Add it to _environmentValues before use.',
+      );
+    }
     return value.isEmpty ? null : value;
   }
 
@@ -25,7 +87,13 @@ class DefaultFirebaseOptions {
   }
 
   static String _requireEnv(String key) {
-    final value = String.fromEnvironment(key);
+    final value = _environmentValues[key];
+    if (value == null) {
+      throw UnsupportedError(
+        'Unknown Firebase config key requested: $key. '
+        'Add it to _environmentValues before use.',
+      );
+    }
     if (value.isEmpty) {
       throw UnsupportedError(
         'Missing required Firebase config value: $key. '
