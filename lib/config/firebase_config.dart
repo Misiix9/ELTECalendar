@@ -14,6 +14,16 @@ class DefaultFirebaseOptions {
     return value.isEmpty ? null : value;
   }
 
+  static String? _optionalAnyEnv(List<String> keys) {
+    for (final key in keys) {
+      final value = _optionalEnv(key);
+      if (value != null) {
+        return value;
+      }
+    }
+    return null;
+  }
+
   static String _requireEnv(String key) {
     final value = String.fromEnvironment(key);
     if (value.isEmpty) {
@@ -23,6 +33,20 @@ class DefaultFirebaseOptions {
       );
     }
     return value;
+  }
+
+  static String _requireAnyEnv(List<String> keys) {
+    for (final key in keys) {
+      final value = _optionalEnv(key);
+      if (value != null) {
+        return value;
+      }
+    }
+
+    throw UnsupportedError(
+      'Missing required Firebase config value. '
+      'Provide one of: ${keys.join(', ')} via --dart-define.',
+    );
   }
 
   /// Current platform Firebase options
@@ -56,14 +80,17 @@ class DefaultFirebaseOptions {
 
   /// Web platform configuration
   static FirebaseOptions get web => FirebaseOptions(
-    apiKey: _requireEnv('FIREBASE_WEB_API_KEY'),
-    authDomain: _requireEnv('FIREBASE_WEB_AUTH_DOMAIN'),
-    projectId: _requireEnv('FIREBASE_WEB_PROJECT_ID'),
-    storageBucket: _requireEnv('FIREBASE_WEB_STORAGE_BUCKET'),
-    messagingSenderId: _requireEnv('FIREBASE_WEB_MESSAGING_SENDER_ID'),
-    appId: _requireEnv('FIREBASE_WEB_APP_ID'),
+    apiKey: _requireAnyEnv(['FIREBASE_WEB_API_KEY', 'FIREBASE_API_KEY']),
+    authDomain: _requireAnyEnv(['FIREBASE_WEB_AUTH_DOMAIN', 'FIREBASE_AUTH_DOMAIN']),
+    projectId: _requireAnyEnv(['FIREBASE_WEB_PROJECT_ID', 'FIREBASE_PROJECT_ID']),
+    storageBucket: _requireAnyEnv(['FIREBASE_WEB_STORAGE_BUCKET', 'FIREBASE_STORAGE_BUCKET']),
+    messagingSenderId: _requireAnyEnv([
+      'FIREBASE_WEB_MESSAGING_SENDER_ID',
+      'FIREBASE_MESSAGING_SENDER_ID',
+    ]),
+    appId: _requireAnyEnv(['FIREBASE_WEB_APP_ID', 'FIREBASE_APP_ID']),
     // Optional for projects not using Analytics on web.
-    measurementId: _optionalEnv('FIREBASE_WEB_MEASUREMENT_ID'),
+    measurementId: _optionalAnyEnv(['FIREBASE_WEB_MEASUREMENT_ID', 'FIREBASE_MEASUREMENT_ID']),
   );
 
   /// Android platform configuration

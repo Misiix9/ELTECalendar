@@ -71,6 +71,12 @@ class AuthService extends ChangeNotifier {
   Future<void> _initializeGoogleSignIn() async {
     if (_googleSignInInitialized) return;
 
+    // Web Google login uses FirebaseAuth.signInWithPopup directly.
+    if (kIsWeb) {
+      _googleSignInInitialized = true;
+      return;
+    }
+
     final clientId = const String.fromEnvironment('GOOGLE_SIGN_IN_CLIENT_ID');
     final serverClientId = const String.fromEnvironment('GOOGLE_SIGN_IN_SERVER_CLIENT_ID');
 
