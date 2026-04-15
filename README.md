@@ -23,7 +23,19 @@ The app is built with Firebase-backed services and local/offline-friendly storag
 
 ## Excel format support
 
-The parser is built for Hungarian course export columns:
+The parser supports the Hungarian course export layout where the first row is:
+
+- `Kurzuskód`
+- `Státusz` (ignored)
+- `Tárgynév`
+- `Tantárgy kód`
+- `Típus`
+- `Óraszám`
+- `Órarend`
+- `Oktató`
+- `Óratartás módja` (ignored)
+
+Legacy Hungarian columns are also accepted:
 
 - `Tárgy kódja`
 - `Tárgy neve`
