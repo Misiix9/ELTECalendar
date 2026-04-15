@@ -661,7 +661,17 @@ class AuthService extends ChangeNotifier {
       case 'too-many-requests':
         return 'Too many failed attempts. Please try again later';
       case 'operation-not-allowed':
-        return 'This sign-in method is not enabled';
+        return 'This sign-in method is not enabled. '
+            'Enable Google in Firebase Console → Authentication → Sign-in method.';
+      case 'unauthorized-domain':
+        return 'This domain is not authorized for Google sign-in. '
+            'Add it in Firebase Console → Authentication → Settings → Authorized domains.';
+      case 'network-request-failed':
+        return 'Network error while contacting Firebase. '
+            'Check your connection and try again.';
+      case 'popup-blocked':
+        return 'The sign-in popup was blocked by the browser. '
+            'Allow popups for this site and try again.';
       case 'requires-recent-login':
         return 'Please sign in again to complete this action';
       default:
