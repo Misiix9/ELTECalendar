@@ -35,6 +35,7 @@ import 'widgets/navigation/navigation_wrapper.dart';
 
 const _errorTextColor = Color(0xFF060605);
 const _startupRetryDelayMultiplierMs = 800;
+const _maxStartupInitAttempts = 3;
 
 /// Main application entry point
 /// Initializes Firebase, Hive local storage, and app configuration
@@ -42,10 +43,9 @@ void main() async {
   // Ensure Flutter binding is initialized
   WidgetsFlutterBinding.ensureInitialized();
 
-  const maxInitAttempts = 3;
   Object? lastError;
 
-  for (var attempt = 1; attempt <= maxInitAttempts; attempt++) {
+  for (var attempt = 1; attempt <= _maxStartupInitAttempts; attempt++) {
     try {
       // Initialize Firebase
       await Firebase.initializeApp(
@@ -66,10 +66,13 @@ void main() async {
       return;
     } catch (error) {
       lastError = error;
-      debugPrint('Error initializing app (attempt $attempt/$maxInitAttempts): $error');
+      debugPrint(
+        'Error initializing app (attempt $attempt/$_maxStartupInitAttempts): $error',
+      );
 
       final shouldRetry =
-          attempt < maxInitAttempts && _isRetryableStartupError(error.toString());
+          attempt < _maxStartupInitAttempts &&
+          _isRetryableStartupError(error.toString());
       if (!shouldRetry) {
         break;
       }
