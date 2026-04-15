@@ -12,16 +12,19 @@ import '../models/course_model.dart';
 class ExcelParserService {
   static const String _logTag = 'ExcelParserService';
 
-  /// Required Hungarian column headers
-  static const Map<String, String> _requiredColumns = {
-    'subject_code': 'Tárgy kódja',
-    'subject_name': 'Tárgy neve', 
-    'course_code': 'Kurzus kódja',
-    'course_type': 'Kurzus típusa',
-    'hours': 'Óraszám:',
-    'schedule_info': 'Órarend infó',
-    'instructors': 'Oktatók',
-    'waiting_list': 'Várólista', // This column is ignored
+  /// Required Hungarian column headers (supports both legacy and new export layouts)
+  static const Map<String, List<String>> _requiredColumns = {
+    'subject_code': ['Tárgy kódja', 'Tantárgy kód'],
+    'subject_name': ['Tárgy neve', 'Tárgynév'],
+    'course_code': ['Kurzus kódja', 'Kurzuskód'],
+    'course_type': ['Kurzus típusa', 'Típus'],
+    'hours': ['Óraszám:', 'Óraszám'],
+    'schedule_info': ['Órarend infó', 'Órarend'],
+    'instructors': ['Oktatók', 'Oktató'],
+    // Optional/ignored columns in supported files:
+    // - Státusz
+    // - Óratartás módja
+    // - Várólista
   };
 
   /// Hungarian day abbreviations mapping
@@ -129,7 +132,14 @@ class ExcelParserService {
       if (columnMapping == null) {
         return ExcelParseResult(
           success: false,
-          message: 'Excel file does not contain required Hungarian column headers.\n\nRequired columns:\n${_requiredColumns.values.join('\n')}',
+          message: 'Excel file does not contain required Hungarian column headers.\n\nRequired columns:\n'
+              '• Kurzuskód (or Kurzus kódja)\n'
+              '• Tárgynév (or Tárgy neve)\n'
+              '• Tantárgy kód (or Tárgy kódja)\n'
+              '• Típus (or Kurzus típusa)\n'
+              '• Óraszám (or Óraszám:)\n'
+              '• Órarend (or Órarend infó)\n'
+              '• Oktató (or Oktatók)',
           courses: [],
         );
       }
@@ -189,24 +199,33 @@ class ExcelParserService {
     final headerRow = sheet.row(0);
     final Map<String, int> columnMapping = {};
 
-    // Find each required column (except waiting list which is optional)
-    for (final entry in _requiredColumns.entries) {
-      if (entry.key == 'waiting_list') continue; // Skip optional column
+    final normalizedHeaders = <String, int>{};
+    for (int colIndex = 0; colIndex < headerRow.length; colIndex++) {
+      final cell = headerRow[colIndex];
+      final cellValue = cell?.value?.toString().trim() ?? '';
+      final normalized = _normalizeHeader(cellValue);
+      if (normalized.isNotEmpty) {
+        normalizedHeaders[normalized] = colIndex;
+      }
+    }
 
-      bool found = false;
-      for (int colIndex = 0; colIndex < headerRow.length; colIndex++) {
-        final cell = headerRow[colIndex];
-        final cellValue = cell?.value?.toString().trim() ?? '';
-        
-        if (cellValue.toLowerCase() == entry.value.toLowerCase()) {
+    // Find each required column using supported aliases
+    for (final entry in _requiredColumns.entries) {
+      bool matched = false;
+      for (final alias in entry.value) {
+        final normalizedAlias = _normalizeHeader(alias);
+        final colIndex = normalizedHeaders[normalizedAlias];
+        if (colIndex != null) {
           columnMapping[entry.key] = colIndex;
-          found = true;
+          matched = true;
           break;
         }
       }
 
-      if (!found) {
-        debugPrint('ExcelParserService: Required column "${entry.value}" not found');
+      if (!matched) {
+        debugPrint(
+          'ExcelParserService: Required column aliases ${entry.value} not found',
+        );
         return null;
       }
     }
@@ -276,6 +295,15 @@ class ExcelParserService {
     if (columnIndex >= row.length) return '';
     final cell = row[columnIndex];
     return cell?.value?.toString().trim() ?? '';
+  }
+
+  /// Normalize header names for resilient matching
+  static String _normalizeHeader(String header) {
+    return header
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .replaceAll(':', '');
   }
 
   /// Parse the "Órarend infó" field into schedule slots

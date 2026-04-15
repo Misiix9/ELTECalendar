@@ -10,16 +10,29 @@ import 'package:flutter/foundation.dart';
 class ExcelTemplateService {
   static const String _logTag = 'ExcelTemplateService';
 
-  /// Hungarian column headers for the template
+  /// Hungarian column headers for the requested export layout
   static const List<String> _templateHeaders = [
-    'Tárgy kódja',      // Subject code
-    'Tárgy neve',       // Subject name
-    'Kurzus kódja',     // Course code
-    'Kurzus típusa',    // Course type
-    'Óraszám:',         // Hours
-    'Órarend infó',     // Schedule info
-    'Oktatók',          // Instructors
+    'Kurzuskód',        // Course code
+    'Státusz',          // Status (ignored by parser)
+    'Tárgynév',         // Subject name
+    'Tantárgy kód',     // Subject code
+    'Típus',            // Course type
+    'Óraszám',          // Hours
+    'Órarend',          // Schedule info
+    'Oktató',           // Instructor
+    'Óratartás módja',  // Teaching mode (ignored by parser)
   ];
+
+  /// Header aliases accepted during structure validation
+  static const Map<String, List<String>> _acceptedHeaderAliases = {
+    'course_code': ['Kurzuskód', 'Kurzus kódja'],
+    'subject_name': ['Tárgynév', 'Tárgy neve'],
+    'subject_code': ['Tantárgy kód', 'Tárgy kódja'],
+    'course_type': ['Típus', 'Kurzus típusa'],
+    'hours': ['Óraszám', 'Óraszám:'],
+    'schedule_info': ['Órarend', 'Órarend infó'],
+    'instructor': ['Oktató', 'Oktatók'],
+  };
 
   /// Generate a sample Excel template with example data
   static Uint8List generateTemplate() {
@@ -45,40 +58,48 @@ class ExcelTemplateService {
       // Add sample data rows
       final sampleData = [
         [
-          'IK-1234',
-          'Algoritmusok és adatszerkezetek',
           'IK-1234-01',
+          'Aktív',
+          'Algoritmusok és adatszerkezetek',
+          'IK-1234',
           'Előadás',
           '2',
-          'H 10:00-12:00 PC111',
-          'Dr. Nagy Péter'
+          'H:10:00-12:00(PC111 (EA-PC111))',
+          'Dr. Nagy Péter',
+          'jelenléti'
         ],
         [
-          'IK-1234',
-          'Algoritmusok és adatszerkezetek', 
           'IK-1234-02',
+          'Aktív',
+          'Algoritmusok és adatszerkezetek',
+          'IK-1234',
           'Gyakorlat',
           '2',
-          'K 14:00-16:00 PC202',
-          'Kiss Anna'
+          'K:14:00-16:00(PC202 (GY-PC202))',
+          'Kiss Anna',
+          'jelenléti'
         ],
         [
-          'IK-5678',
-          'Adatbázisok',
           'IK-5678-01',
+          'Aktív',
+          'Adatbázisok',
+          'IK-5678',
           'Előadás',
           '3',
-          'SZE 9:00-12:00 0.81',
-          'Dr. Kovács János'
+          'SZE:09:00-12:00(0.81 (EA-0.81))',
+          'Dr. Kovács János',
+          'jelenléti'
         ],
         [
-          'IK-5678',
-          'Adatbázisok',
           'IK-5678-02',
+          'Aktív',
+          'Adatbázisok',
+          'IK-5678',
           'Labor',
           '2',
-          'CS 16:00-18:00 PC115',
-          'Szabó Mária'
+          'CS:16:00-18:00(PC115 (LB-PC115))',
+          'Szabó Mária',
+          'jelenléti'
         ],
       ];
       
@@ -104,13 +125,15 @@ class ExcelTemplateService {
         'Excel Import Instructions',
         '',
         'Required Columns:',
-        '• Tárgy kódja - Subject/course identifier code',
-        '• Tárgy neve - Full name of the subject',
-        '• Kurzus kódja - Specific course section code', 
-        '• Kurzus típusa - Type (Előadás, Gyakorlat, Labor, etc.)',
-        '• Óraszám: - Number of hours per week',
-        '• Órarend infó - Schedule information in format: "DAY HH:MM-HH:MM ROOM"',
-        '• Oktatók - Instructor names',
+        '• Kurzuskód - Specific course section code',
+        '• Státusz - Status (optional/ignored by parser)',
+        '• Tárgynév - Full name of the subject',
+        '• Tantárgy kód - Subject/course identifier code',
+        '• Típus - Type (Előadás, Gyakorlat, Labor, etc.)',
+        '• Óraszám - Number of hours per week',
+        '• Órarend - Schedule info format: "DAY:HH:MM-HH:MM(ROOM (CODE))"',
+        '• Oktató - Instructor name(s)',
+        '• Óratartás módja - Teaching mode (optional/ignored by parser)',
         '',
         'Day Abbreviations:',
         '• H = Hétfő (Monday)',
@@ -195,23 +218,25 @@ class ExcelTemplateService {
         );
       }
 
-      // Check for required columns
+      // Check for required columns (accepting legacy and new aliases)
       final headerRow = sheet.row(0);
-      final foundHeaders = <String>[];
+      final foundHeaders = <String, String>{};
       final missingHeaders = <String>[];
+      final normalizedHeaders = headerRow
+          .map((cell) => _normalizeHeader(cell?.value?.toString() ?? ''))
+          .toSet();
       
-      for (final header in _templateHeaders) {
+      for (final entry in _acceptedHeaderAliases.entries) {
         bool found = false;
-        for (int i = 0; i < headerRow.length; i++) {
-          final cellValue = headerRow[i]?.value?.toString().trim() ?? '';
-          if (cellValue.toLowerCase() == header.toLowerCase()) {
-            foundHeaders.add(header);
+        for (final alias in entry.value) {
+          if (normalizedHeaders.contains(_normalizeHeader(alias))) {
+            foundHeaders[entry.key] = alias;
             found = true;
             break;
           }
         }
-        if (!found && header != 'Várólista') { // Várólista is optional
-          missingHeaders.add(header);
+        if (!found) {
+          missingHeaders.add(entry.value.first);
         }
       }
 
@@ -240,6 +265,14 @@ class ExcelTemplateService {
         suggestions: ['Try using a different Excel file or check if it\'s corrupted'],
       );
     }
+  }
+
+  static String _normalizeHeader(String value) {
+    return value
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .replaceAll(':', '');
   }
 }
 
