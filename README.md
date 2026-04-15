@@ -138,6 +138,22 @@ Supported secret names are either `FIREBASE_WEB_*` or the generic `FIREBASE_*` e
 - `FIREBASE_WEB_APP_ID` or `FIREBASE_APP_ID`
 - Optional: `FIREBASE_WEB_MEASUREMENT_ID` or `FIREBASE_MEASUREMENT_ID`
 
+### Manual Firebase + Google Auth checklist (required for full login flow)
+
+If the app shows **"Failed to initialize ELTE Calendar"**, complete these in order:
+
+1. **GitHub repo secrets** (`Settings → Secrets and variables → Actions`):
+   - Set all required `FIREBASE_WEB_*` values listed above.
+2. **Firebase Console: enable Google login** (`Authentication → Sign-in method`):
+   - Enable **Google** provider.
+3. **Firebase Console: authorize your site domain** (`Authentication → Settings → Authorized domains`):
+   - Add `misiix9.github.io` for GitHub Pages.
+   - Add `localhost` for local testing.
+4. **Firebase Console: Web App config source** (`Project settings → General → Your apps → Web app`):
+   - Copy exact Web config values into the GitHub secrets from step 1.
+5. **Redeploy GitHub Pages**:
+   - Re-run `.github/workflows/deploy.yml` after secrets are set.
+
 ## Contributing
 
 Issues and pull requests are welcome. For meaningful changes, include:

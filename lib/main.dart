@@ -38,31 +38,80 @@ import 'widgets/navigation/navigation_wrapper.dart';
 void main() async {
   // Ensure Flutter binding is initialized
   WidgetsFlutterBinding.ensureInitialized();
-  
-  try {
-    // Initialize Firebase
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    
-    // Initialize Hive for local storage
-    await Hive.initFlutter();
-    
-    // Register Hive adapters for custom objects
-    // Note: Adapters will be generated when running 'dart run build_runner build'
-    // Hive.registerAdapter(StudentUserAdapter());
-    // Hive.registerAdapter(CourseAdapter());
-    // Hive.registerAdapter(ScheduleSlotAdapter());
-    
-    // Run the application
-    runApp(const ELTECalendarApp());
-  } catch (error) {
-    // Log initialization errors
-    debugPrint('Error initializing app: $error');
-    
-    // Run app with error state
-    runApp(ErrorApp(error: error.toString()));
+
+  const maxInitAttempts = 3;
+  Object? lastError;
+
+  for (var attempt = 1; attempt <= maxInitAttempts; attempt++) {
+    try {
+      // Initialize Firebase
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+
+      // Initialize Hive for local storage
+      await Hive.initFlutter();
+
+      // Register Hive adapters for custom objects
+      // Note: Adapters will be generated when running 'dart run build_runner build'
+      // Hive.registerAdapter(StudentUserAdapter());
+      // Hive.registerAdapter(CourseAdapter());
+      // Hive.registerAdapter(ScheduleSlotAdapter());
+
+      // Run the application
+      runApp(const ELTECalendarApp());
+      return;
+    } catch (error) {
+      lastError = error;
+      debugPrint('Error initializing app (attempt $attempt/$maxInitAttempts): $error');
+
+      final shouldRetry =
+          attempt < maxInitAttempts && _isRetryableStartupError(error.toString());
+      if (!shouldRetry) {
+        break;
+      }
+
+      await Future<void>.delayed(Duration(milliseconds: attempt * 800));
+    }
   }
+
+  // Run app with error state
+  runApp(ErrorApp(error: lastError?.toString()));
+}
+
+bool _isRetryableStartupError(String errorText) {
+  final text = errorText.toLowerCase();
+  return text.contains('network') ||
+      text.contains('timeout') ||
+      text.contains('timed out') ||
+      text.contains('socket') ||
+      text.contains('connection') ||
+      text.contains('failed host lookup');
+}
+
+String _buildInitializationGuidanceText(String? error) {
+  final errorText = (error ?? '').toLowerCase();
+
+  if (errorText.contains('missing required firebase config value')) {
+    return 'Firebase web configuration is missing. Add FIREBASE_WEB_* (or FIREBASE_*) '
+        'repository secrets, then redeploy.';
+  }
+
+  if (errorText.contains('unauthorized-domain')) {
+    return 'Google auth domain is not allowed. In Firebase Console → Authentication → '
+        'Settings → Authorized domains, add your site domain.';
+  }
+
+  if (errorText.contains('network') ||
+      errorText.contains('timeout') ||
+      errorText.contains('socket') ||
+      errorText.contains('connection')) {
+    return 'Could not reach Firebase. Check internet access and verify the Firebase '
+        'project is active.';
+  }
+
+  return 'Initialization failed due to Firebase setup or connectivity. '
+      'Review the technical details below.';
 }
 
 /// Main application widget with proper configuration and providers
@@ -262,12 +311,7 @@ class ErrorApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isFirebaseConfigError =
-        (error ?? '').contains('Missing required Firebase config value');
-    final guidanceText = isFirebaseConfigError
-        ? 'Firebase web configuration is missing. Please set the required '
-            'FIREBASE_* deployment variables and redeploy.'
-        : 'Please check your internet connection and try again.';
+    final guidanceText = _buildInitializationGuidanceText(error);
 
     return MaterialApp(
       title: 'ELTE Calendar - Error',
@@ -305,6 +349,20 @@ class ErrorApp extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
+              if ((error ?? '').isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: SelectableText(
+                    'Technical details: $error',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF060605),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () {
