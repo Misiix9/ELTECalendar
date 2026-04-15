@@ -64,6 +64,7 @@ jobs:
 
     - name: Validate required Firebase web secrets
       run: |
+        # FIREBASE_WEB_MEASUREMENT_ID is optional and intentionally not required.
         required_vars=(
           FIREBASE_WEB_API_KEY
           FIREBASE_WEB_AUTH_DOMAIN
@@ -86,6 +87,7 @@ jobs:
     
     - name: Build Flutter web
       run: |
+        # FIREBASE_WEB_MEASUREMENT_ID is optional for projects not using Analytics on web.
         flutter build web --release --base-href "/${{ env.REPO_NAME }}/" --verbose \
           --dart-define=FIREBASE_WEB_API_KEY="${FIREBASE_WEB_API_KEY}" \
           --dart-define=FIREBASE_WEB_AUTH_DOMAIN="${FIREBASE_WEB_AUTH_DOMAIN}" \
