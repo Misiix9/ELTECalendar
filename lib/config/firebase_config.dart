@@ -57,6 +57,7 @@ class DefaultFirebaseOptions {
     storageBucket: _requireEnv('FIREBASE_WEB_STORAGE_BUCKET'),
     messagingSenderId: _requireEnv('FIREBASE_WEB_MESSAGING_SENDER_ID'),
     appId: _requireEnv('FIREBASE_WEB_APP_ID'),
+    // Optional for projects not using Analytics on web.
     measurementId: const String.fromEnvironment('FIREBASE_WEB_MEASUREMENT_ID'),
   );
 

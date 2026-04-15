@@ -71,9 +71,12 @@ class AuthService extends ChangeNotifier {
   Future<void> _initializeGoogleSignIn() async {
     if (_googleSignInInitialized) return;
 
+    final clientId = const String.fromEnvironment('GOOGLE_SIGN_IN_CLIENT_ID');
+    final serverClientId = const String.fromEnvironment('GOOGLE_SIGN_IN_SERVER_CLIENT_ID');
+
     await _googleSignIn.initialize(
-      clientId: const String.fromEnvironment('GOOGLE_SIGN_IN_CLIENT_ID'),
-      serverClientId: const String.fromEnvironment('GOOGLE_SIGN_IN_SERVER_CLIENT_ID'),
+      clientId: clientId.isEmpty ? null : clientId,
+      serverClientId: serverClientId.isEmpty ? null : serverClientId,
     );
 
     _googleSignInInitialized = true;
@@ -354,7 +357,10 @@ class AuthService extends ChangeNotifier {
         return AuthResult.failure('Google sign-in is not supported on this platform');
       }
 
-      final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
+      final GoogleSignInAccount? googleUser = await _googleSignIn.authenticate();
+      if (googleUser == null) {
+        return AuthResult.failure('Google sign-in cancelled');
+      }
       final GoogleSignInAuthentication googleAuth = googleUser.authentication;
 
       if (googleAuth.idToken == null || googleAuth.idToken!.isEmpty) {
