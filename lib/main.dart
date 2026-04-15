@@ -262,6 +262,13 @@ class ErrorApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isFirebaseConfigError =
+        (error ?? '').contains('Missing required Firebase config value');
+    final guidanceText = isFirebaseConfigError
+        ? 'Firebase web configuration is missing. Please set the required '
+            'FIREBASE_* deployment variables and redeploy.'
+        : 'Please check your internet connection and try again.';
+
     return MaterialApp(
       title: 'ELTE Calendar - Error',
       debugShowCheckedModeBanner: false,
@@ -290,8 +297,8 @@ class ErrorApp extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Please check your internet connection and try again.',
+              Text(
+                guidanceText,
                 style: TextStyle(
                   fontSize: 14,
                   color: Color(0xFF060605),

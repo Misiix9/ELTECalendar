@@ -127,6 +127,17 @@ For Android/iOS native setup, place your real Firebase config files locally (the
 
 This repository includes GitHub Actions workflows for Flutter web deployment to GitHub Pages and Firebase-related workflows under `.github/workflows/`.
 
+For GitHub Pages deployment, configure repository secrets for Firebase web config.  
+Supported secret names are either `FIREBASE_WEB_*` or the generic `FIREBASE_*` equivalents:
+
+- `FIREBASE_WEB_API_KEY` or `FIREBASE_API_KEY`
+- `FIREBASE_WEB_AUTH_DOMAIN` or `FIREBASE_AUTH_DOMAIN`
+- `FIREBASE_WEB_PROJECT_ID` or `FIREBASE_PROJECT_ID`
+- `FIREBASE_WEB_STORAGE_BUCKET` or `FIREBASE_STORAGE_BUCKET`
+- `FIREBASE_WEB_MESSAGING_SENDER_ID` or `FIREBASE_MESSAGING_SENDER_ID`
+- `FIREBASE_WEB_APP_ID` or `FIREBASE_APP_ID`
+- Optional: `FIREBASE_WEB_MEASUREMENT_ID` or `FIREBASE_MEASUREMENT_ID`
+
 ## Contributing
 
 Issues and pull requests are welcome. For meaningful changes, include:
