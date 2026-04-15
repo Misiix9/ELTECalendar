@@ -34,6 +34,7 @@ import 'widgets/common_widgets/auth_wrapper.dart';
 import 'widgets/navigation/navigation_wrapper.dart';
 
 const _errorTextColor = Color(0xFF060605);
+const _startupRetryDelayMultiplierMs = 800;
 
 /// Main application entry point
 /// Initializes Firebase, Hive local storage, and app configuration
@@ -73,7 +74,9 @@ void main() async {
         break;
       }
 
-      await Future<void>.delayed(Duration(milliseconds: attempt * 800));
+      await Future<void>.delayed(
+        Duration(milliseconds: attempt * _startupRetryDelayMultiplierMs),
+      );
     }
   }
 
