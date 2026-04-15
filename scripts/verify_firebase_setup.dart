@@ -79,7 +79,9 @@ bool checkFirebaseConfig() {
   final configFile = File('lib/config/firebase_config.dart');
   if (configFile.existsSync()) {
     final content = configFile.readAsStringSync();
-    if (content.contains('your-web-api-key')) {
+    if (content.contains("String.fromEnvironment('FIREBASE_WEB_API_KEY')")) {
+      print('   ✅ Firebase configuration is environment-based (no hardcoded secrets)');
+    } else if (content.contains('your-web-api-key')) {
       print('   ⚠️  Firebase credentials need to be updated (placeholder values found)');
       configValid = false;
     } else {

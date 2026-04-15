@@ -85,6 +85,44 @@ Run tests:
 flutter test
 ```
 
+### Firebase and Google Sign-In setup (without committing secrets)
+
+This repository does not store real Firebase secrets. Configure Firebase via runtime defines and local platform files:
+
+```bash
+flutter run \
+  --dart-define=FIREBASE_WEB_API_KEY=... \
+  --dart-define=FIREBASE_WEB_AUTH_DOMAIN=... \
+  --dart-define=FIREBASE_WEB_PROJECT_ID=... \
+  --dart-define=FIREBASE_WEB_STORAGE_BUCKET=... \
+  --dart-define=FIREBASE_WEB_MESSAGING_SENDER_ID=... \
+  --dart-define=FIREBASE_WEB_APP_ID=... \
+  --dart-define=FIREBASE_ANDROID_API_KEY=... \
+  --dart-define=FIREBASE_ANDROID_APP_ID=... \
+  --dart-define=FIREBASE_ANDROID_MESSAGING_SENDER_ID=... \
+  --dart-define=FIREBASE_ANDROID_PROJECT_ID=... \
+  --dart-define=FIREBASE_ANDROID_STORAGE_BUCKET=... \
+  --dart-define=FIREBASE_IOS_API_KEY=... \
+  --dart-define=FIREBASE_IOS_APP_ID=... \
+  --dart-define=FIREBASE_IOS_MESSAGING_SENDER_ID=... \
+  --dart-define=FIREBASE_IOS_PROJECT_ID=... \
+  --dart-define=FIREBASE_IOS_STORAGE_BUCKET=... \
+  --dart-define=FIREBASE_IOS_BUNDLE_ID=com.elte.calendar \
+  --dart-define=FIREBASE_MACOS_API_KEY=... \
+  --dart-define=FIREBASE_MACOS_APP_ID=... \
+  --dart-define=FIREBASE_MACOS_MESSAGING_SENDER_ID=... \
+  --dart-define=FIREBASE_MACOS_PROJECT_ID=... \
+  --dart-define=FIREBASE_MACOS_STORAGE_BUCKET=... \
+  --dart-define=FIREBASE_MACOS_BUNDLE_ID=com.elte.calendar \
+  --dart-define=GOOGLE_SIGN_IN_CLIENT_ID=... \
+  --dart-define=GOOGLE_SIGN_IN_SERVER_CLIENT_ID=...
+```
+
+For Android/iOS native setup, place your real Firebase config files locally (they are gitignored):
+
+- `android/app/google-services.json`
+- `ios/Runner/GoogleService-Info.plist`
+
 ## Deployment
 
 This repository includes GitHub Actions workflows for Flutter web deployment to GitHub Pages and Firebase-related workflows under `.github/workflows/`.

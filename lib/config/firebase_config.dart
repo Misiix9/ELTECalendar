@@ -9,6 +9,17 @@ import 'package:flutter/foundation.dart';
 /// This file will need to be updated with actual Firebase project credentials
 /// after creating the Firebase project in Step 1.2
 class DefaultFirebaseOptions {
+  static String _requireEnv(String key) {
+    final value = String.fromEnvironment(key);
+    if (value.isEmpty) {
+      throw UnsupportedError(
+        'Missing required Firebase config value: $key. '
+        'Provide it via --dart-define.',
+      );
+    }
+    return value;
+  }
+
   /// Current platform Firebase options
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
@@ -39,47 +50,43 @@ class DefaultFirebaseOptions {
   }
 
   /// Web platform configuration
-  /// TODO: Replace with actual Firebase project credentials
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: "AIzaSyAl4fkaO1z6ipOqgxt9xqzr2Tz1vLyTj2c",
-    authDomain: "elte-calendar-61bb3.firebaseapp.com",
-    projectId: "elte-calendar-61bb3",
-    storageBucket: "elte-calendar-61bb3.firebasestorage.app",
-    messagingSenderId: "971124387883",
-    appId: "1:971124387883:web:620dda2152c9ec032a7a6e",
-    measurementId: "G-JG57EJ1BEJ"
+  static FirebaseOptions get web => FirebaseOptions(
+    apiKey: _requireEnv('FIREBASE_WEB_API_KEY'),
+    authDomain: _requireEnv('FIREBASE_WEB_AUTH_DOMAIN'),
+    projectId: _requireEnv('FIREBASE_WEB_PROJECT_ID'),
+    storageBucket: _requireEnv('FIREBASE_WEB_STORAGE_BUCKET'),
+    messagingSenderId: _requireEnv('FIREBASE_WEB_MESSAGING_SENDER_ID'),
+    appId: _requireEnv('FIREBASE_WEB_APP_ID'),
+    measurementId: const String.fromEnvironment('FIREBASE_WEB_MEASUREMENT_ID'),
   );
 
   /// Android platform configuration
-  /// TODO: Replace with actual Firebase project credentials
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'your-android-api-key',
-    appId: '1:971124387883:android:78ef49c0547f1cb62a7a6e',
-    messagingSenderId: 'your-sender-id',
-    projectId: 'elte-calendar',
-    storageBucket: 'elte-calendar.appspot.com',
+  static FirebaseOptions get android => FirebaseOptions(
+    apiKey: _requireEnv('FIREBASE_ANDROID_API_KEY'),
+    appId: _requireEnv('FIREBASE_ANDROID_APP_ID'),
+    messagingSenderId: _requireEnv('FIREBASE_ANDROID_MESSAGING_SENDER_ID'),
+    projectId: _requireEnv('FIREBASE_ANDROID_PROJECT_ID'),
+    storageBucket: _requireEnv('FIREBASE_ANDROID_STORAGE_BUCKET'),
   );
 
   /// iOS platform configuration
-  /// TODO: Replace with actual Firebase project credentials
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'your-ios-api-key',
-    appId: '1:971124387883:ios:5417f0bb976d4fe22a7a6e',
-    messagingSenderId: 'your-sender-id',
-    projectId: 'elte-calendar',
-    storageBucket: 'elte-calendar.appspot.com',
-    iosBundleId: 'com.elte.calendar',
+  static FirebaseOptions get ios => FirebaseOptions(
+    apiKey: _requireEnv('FIREBASE_IOS_API_KEY'),
+    appId: _requireEnv('FIREBASE_IOS_APP_ID'),
+    messagingSenderId: _requireEnv('FIREBASE_IOS_MESSAGING_SENDER_ID'),
+    projectId: _requireEnv('FIREBASE_IOS_PROJECT_ID'),
+    storageBucket: _requireEnv('FIREBASE_IOS_STORAGE_BUCKET'),
+    iosBundleId: _requireEnv('FIREBASE_IOS_BUNDLE_ID'),
   );
 
   /// macOS platform configuration
-  /// TODO: Replace with actual Firebase project credentials
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'your-macos-api-key',
-    appId: 'your-macos-app-id',
-    messagingSenderId: 'your-sender-id',
-    projectId: 'elte-calendar',
-    storageBucket: 'elte-calendar.appspot.com',
-    iosBundleId: 'com.elte.calendar',
+  static FirebaseOptions get macos => FirebaseOptions(
+    apiKey: _requireEnv('FIREBASE_MACOS_API_KEY'),
+    appId: _requireEnv('FIREBASE_MACOS_APP_ID'),
+    messagingSenderId: _requireEnv('FIREBASE_MACOS_MESSAGING_SENDER_ID'),
+    projectId: _requireEnv('FIREBASE_MACOS_PROJECT_ID'),
+    storageBucket: _requireEnv('FIREBASE_MACOS_STORAGE_BUCKET'),
+    iosBundleId: _requireEnv('FIREBASE_MACOS_BUNDLE_ID'),
   );
 }
 
