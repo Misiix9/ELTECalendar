@@ -75,7 +75,7 @@ jobs:
         )
         missing_count=0
         for key in "${required_vars[@]}"; do
-          if [ -z "${!key}" ]; then
+          if [ -z "$(printenv "$key")" ]; then
             echo "::error::$key is not set."
             missing_count=$((missing_count + 1))
           fi
