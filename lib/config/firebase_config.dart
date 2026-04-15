@@ -9,6 +9,11 @@ import 'package:flutter/foundation.dart';
 /// This file will need to be updated with actual Firebase project credentials
 /// after creating the Firebase project in Step 1.2
 class DefaultFirebaseOptions {
+  static String? _optionalEnv(String key) {
+    final value = String.fromEnvironment(key);
+    return value.isEmpty ? null : value;
+  }
+
   static String _requireEnv(String key) {
     final value = String.fromEnvironment(key);
     if (value.isEmpty) {
@@ -58,7 +63,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: _requireEnv('FIREBASE_WEB_MESSAGING_SENDER_ID'),
     appId: _requireEnv('FIREBASE_WEB_APP_ID'),
     // Optional for projects not using Analytics on web.
-    measurementId: const String.fromEnvironment('FIREBASE_WEB_MEASUREMENT_ID'),
+    measurementId: _optionalEnv('FIREBASE_WEB_MEASUREMENT_ID'),
   );
 
   /// Android platform configuration
