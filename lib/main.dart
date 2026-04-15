@@ -33,6 +33,8 @@ import 'screens/notifications/notifications_screen.dart';
 import 'widgets/common_widgets/auth_wrapper.dart';
 import 'widgets/navigation/navigation_wrapper.dart';
 
+const _errorTextColor = Color(0xFF060605);
+
 /// Main application entry point
 /// Initializes Firebase, Hive local storage, and app configuration
 void main() async {
@@ -345,7 +347,7 @@ class ErrorApp extends StatelessWidget {
                 guidanceText,
                 style: TextStyle(
                   fontSize: 14,
-                  color: Color(0xFF060605),
+                  color: _errorTextColor,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -357,7 +359,7 @@ class ErrorApp extends StatelessWidget {
                     'Technical details: $error',
                     style: const TextStyle(
                       fontSize: 12,
-                      color: Color(0xFF060605),
+                      color: _errorTextColor,
                     ),
                     textAlign: TextAlign.center,
                   ),

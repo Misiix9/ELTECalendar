@@ -147,7 +147,7 @@ If the app shows **"Failed to initialize ELTE Calendar"**, complete these in ord
 2. **Firebase Console: enable Google login** (`Authentication → Sign-in method`):
    - Enable **Google** provider.
 3. **Firebase Console: authorize your site domain** (`Authentication → Settings → Authorized domains`):
-   - Add `misiix9.github.io` for GitHub Pages.
+   - Add `<your-github-username>.github.io` for GitHub Pages.
    - Add `localhost` for local testing.
 4. **Firebase Console: Web App config source** (`Project settings → General → Your apps → Web app`):
    - Copy exact Web config values into the GitHub secrets from step 1.
