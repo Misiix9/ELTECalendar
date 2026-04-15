@@ -18,6 +18,7 @@ env:
   # Explicitly disable Node.js detection
   NODE_VERSION: ''
   SKIP_INSTALL_SIMPLE_PROMPT: true
+  REPO_NAME: ${{ github.event.repository.name }}
 
 jobs:
   build:
@@ -54,7 +55,7 @@ jobs:
       run: flutter config --enable-web
     
     - name: Build Flutter web
-      run: flutter build web --release --base-href "/ELTECalendar/" --web-renderer canvaskit --verbose
+      run: flutter build web --release --base-href "/${{ env.REPO_NAME }}/" --web-renderer canvaskit --verbose
     
     - name: Verify build output
       run: |
@@ -76,7 +77,7 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
-        path: 'build/web'
+        path: './build/web'
 
   deploy:
     environment:
