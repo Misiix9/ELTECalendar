@@ -4,7 +4,7 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:google_sign_in/google_sign_in.dart'; // TODO: Re-enable when fixing dependency issues
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:io' show Platform;
@@ -16,12 +16,10 @@ import 'firebase_service.dart';
 /// Comprehensive authentication service implementing all specified requirements
 class AuthService extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  // TODO: Fix GoogleSignIn constructor - temporarily disabled
-  // final GoogleSignIn _googleSignIn = GoogleSignIn(
-  //   scopes: ['email', 'profile'],
-  // );
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseService _firebaseService = FirebaseService();
+  bool _googleSignInInitialized = false;
 
   StudentUser? _currentUser;
   UserAuthState _authState = UserAuthState.unknown;
@@ -49,6 +47,8 @@ class AuthService extends ChangeNotifier {
   /// Initialize authentication service and listen to auth state changes
   Future<void> initialize() async {
     try {
+      await _initializeGoogleSignIn();
+
       // Listen to Firebase Auth state changes
       _auth.authStateChanges().listen(_onAuthStateChanged);
       
@@ -65,6 +65,21 @@ class AuthService extends ChangeNotifier {
       }
       rethrow;
     }
+  }
+
+  /// Initialize Google Sign-In SDK once.
+  Future<void> _initializeGoogleSignIn() async {
+    if (_googleSignInInitialized) return;
+
+    final clientId = const String.fromEnvironment('GOOGLE_SIGN_IN_CLIENT_ID');
+    final serverClientId = const String.fromEnvironment('GOOGLE_SIGN_IN_SERVER_CLIENT_ID');
+
+    await _googleSignIn.initialize(
+      clientId: clientId.isEmpty ? null : clientId,
+      serverClientId: serverClientId.isEmpty ? null : serverClientId,
+    );
+
+    _googleSignInInitialized = true;
   }
 
   /// Handle Firebase Auth state changes
@@ -323,35 +338,54 @@ class AuthService extends ChangeNotifier {
   Future<AuthResult> signInWithGoogle() async {
     try {
       _lastError = null;
+      await _initializeGoogleSignIn();
 
-      // TODO: Fix Google Sign-In dependency issues
-      return AuthResult.failure('Google sign-in temporarily disabled - dependency issues');
+      if (kIsWeb) {
+        final GoogleAuthProvider provider = GoogleAuthProvider();
+        provider.addScope('email');
+        provider.addScope('profile');
 
-      // Trigger Google Sign In
-      // final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      
-      // if (googleUser == null) {
-      //   // User cancelled the sign-in
-      //   return AuthResult.failure('Google sign-in cancelled');
-      // }
+        final UserCredential userCredential = await _auth.signInWithPopup(provider);
+        if (userCredential.user != null) {
+          return AuthResult.success('Google sign-in successful');
+        }
+        return AuthResult.failure('Google sign-in failed');
+      }
 
-      // Get authentication details
-      // final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      // Trigger Google Sign In (Android/iOS/macOS)
+      if (!_googleSignIn.supportsAuthenticate()) {
+        return AuthResult.failure('Google sign-in is not supported on this platform');
+      }
+
+      final GoogleSignInAccount? googleUser = await _googleSignIn.authenticate();
+      if (googleUser == null) {
+        return AuthResult.failure('Google sign-in cancelled');
+      }
+      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+
+      if (googleAuth.idToken == null || googleAuth.idToken!.isEmpty) {
+        return AuthResult.failure('Google sign-in failed: missing ID token');
+      }
 
       // Create Firebase credential
-      // final OAuthCredential credential = GoogleAuthProvider.credential(
-      //   accessToken: googleAuth.accessToken,
-      //   idToken: googleAuth.idToken,
-      // );
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        idToken: googleAuth.idToken,
+      );
 
       // Sign in with credential
-      // final UserCredential userCredential = await _auth.signInWithCredential(credential);
+      final UserCredential userCredential = await _auth.signInWithCredential(credential);
 
-      // if (userCredential.user != null) {
-      //   return AuthResult.success('Google sign-in successful');
-      // } else {
-      //   return AuthResult.failure('Google sign-in failed');
-      // }
+      if (userCredential.user != null) {
+        return AuthResult.success('Google sign-in successful');
+      } else {
+        return AuthResult.failure('Google sign-in failed');
+      }
+    } on GoogleSignInException catch (e) {
+      if (e.code == GoogleSignInExceptionCode.canceled) {
+        return AuthResult.failure('Google sign-in cancelled');
+      }
+      _lastError = 'Google sign-in failed: ${e.description ?? e.code.name}';
+      return AuthResult.failure(_lastError!);
     } on FirebaseAuthException catch (e) {
       _lastError = _getFirebaseAuthErrorMessage(e);
       return AuthResult.failure(_lastError!);
@@ -464,9 +498,11 @@ class AuthService extends ChangeNotifier {
 
       // Sign out from Firebase Auth
       await _auth.signOut();
-      
-      // TODO: Add Google Sign-In signout when GoogleSignIn is properly configured
-      // await _googleSignIn.signOut();
+
+      // Sign out from Google Sign-In if initialized
+      if (_googleSignInInitialized) {
+        await _googleSignIn.signOut();
+      }
 
       // Clear local user data
       _currentUser = null;

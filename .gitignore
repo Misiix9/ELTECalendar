@@ -27,6 +27,8 @@ node_modules/
 .firebase/
 .dataconnect/
 .npm/
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
 
 # Logs
 logs
